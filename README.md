@@ -7,6 +7,10 @@ The firmware's UI and app code runs unchanged in two places: on the device, and 
 virtual clock. That lets the menus be written and tested without flashing, including in a cloud container
 with no display.
 
+Project docs: [status and next steps](docs/STATUS.md) · [decisions](docs/DECISIONS.md) ·
+[architecture and file formats](docs/ARCHITECTURE.md). Rules for contributors (and Claude sessions) are in
+[CLAUDE.md](CLAUDE.md).
+
 ## Layout
 
 ```
