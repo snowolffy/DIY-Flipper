@@ -1,0 +1,10 @@
+{
+  "name": "splash-skip",
+  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00" },
+  "events": [
+    { "t_ms": 100, "type": "button", "button": "OK" },
+    { "t_ms": 300, "type": "assert", "check": "menu_path_equals", "value": "Main" },
+    { "t_ms": 400, "type": "button", "button": "CANCEL" },
+    { "t_ms": 600, "type": "assert", "check": "menu_path_equals", "value": "Main" }
+  ]
+}

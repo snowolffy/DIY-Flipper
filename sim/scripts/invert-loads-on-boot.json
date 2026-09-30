@@ -1,0 +1,7 @@
+{
+  "name": "invert-loads-on-boot",
+  "initial_state": { "storage_seed": "seeds/inverted", "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
+  "events": [
+    { "t_ms": 50, "type": "assert", "check": "state_equals", "field": "invert", "value": true }
+  ]
+}
