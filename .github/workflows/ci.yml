@@ -5,7 +5,8 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
+  headless:
+    name: headless (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -19,9 +20,30 @@ jobs:
         run: cmake --build build --config Release --parallel
       - name: Unit tests and mock-scripts
         run: ctest --test-dir build -C Release --output-on-failure
-      - name: Upload sim_headless (Windows)
-        if: matrix.os == 'windows-latest'
+
+  gui:
+    name: sim_gui (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install X11 headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDIYF_BUILD_GUI=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Tests (incl. GUI smoke test on Linux)
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Upload portable Windows build
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: sim_headless-windows
-          path: build/Release/sim_headless.exe
+          name: diy-flipper-simulator-windows
+          path: |
+            build/Release/sim_gui.exe
+            build/Release/sim_headless.exe

@@ -19,6 +19,7 @@ firmware/            code that runs on the device
 simulator/
   core/              mock HAL, virtual-clock simulator, JSON script runner
   headless/          sim_headless: runs scripts, prints pass/fail (used in the cloud and CI)
+  gui/               sim_gui: the windowed simulator (Dear ImGui + SDL2)
 sim/                 this project's simulator data
   storage/flash/     mirrors LittleFS
   storage/sd/        mirrors the SD card: /ir /nfc /games /media /system
@@ -50,6 +51,34 @@ build/sim_headless --dump-final screen.pbm sim/scripts/boot-to-settings.json
 
 Each run works on a temporary copy of `sim/storage`, so scripts never change the checked-in files. Add
 `--keep-storage` to keep the copy and print where it is.
+
+## The simulator window
+
+**Windows, no build needed:** open the latest run of the CI workflow on GitHub (Actions tab), download the
+`diy-flipper-simulator-windows` artifact, unzip, and run `sim_gui.exe`. It needs no installer or DLLs. Run it
+from the repository root to use `sim/storage`; anywhere else it creates a `sim/` folder next to itself.
+
+**Build it yourself** (SDL2 and Dear ImGui are downloaded by CMake; on Linux install `libx11-dev libxext-dev`
+first):
+
+```sh
+cmake -S . -B build-gui -DCMAKE_BUILD_TYPE=Release -DDIYF_BUILD_GUI=ON
+cmake --build build-gui --config Release --parallel
+build-gui/sim_gui            # or build-gui/Release/sim_gui.exe with Visual Studio
+```
+
+| Key | Button |
+|---|---|
+| Left / Up | LEFT (moves up a list) |
+| Right / Down | RIGHT (moves down a list) |
+| Enter, Z | OK |
+| Esc, Backspace, X | CANCEL (back) |
+| P | POWER |
+| F12 | save the screen as a BMP in `sim/screenshots/` |
+
+The on-screen buttons work too; holding one acts like holding the key. The Mock control panel sets battery
+charge or "no reading", removes the RTC or syncs it to the PC clock, ejects the SD card, and makes every
+write fail. Unlike scripts, the window uses `sim/storage` directly, so settings you change stay on disk.
 
 ## Mock-scripts
 
@@ -91,7 +120,8 @@ LSB-first, 1 = ink.
 ## Status
 
 Done: firmware core with main menu, Settings (invert, date & time, firmware info), boot splash; mocks for
-display, input, storage, battery and RTC; headless runner; CI on Linux, Windows and macOS.
+display, input, storage, battery and RTC; headless runner; windowed simulator with live mock controls;
+CI on Linux, Windows and macOS with a portable Windows build.
 
-Next, in order: native window (Dear ImGui + SDL2) · IR, NFC, WiFi and BLE mocks with live controls ·
-recent-folders list · Import Asset (`.b1i` / `.b1f` / theme `.zip` into `sim/storage`) · ESP32 target.
+Next, in order: IR, NFC, WiFi and BLE mocks with live controls (and loading a script into the live
+window) · recent-folders list · Import Asset (`.b1i` / `.b1f` / theme `.zip` into `sim/storage`) · ESP32 target.

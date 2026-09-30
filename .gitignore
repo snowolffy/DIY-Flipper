@@ -4,3 +4,4 @@
 .vscode/
 .idea/
 *.pbm
+/sim/screenshots/
