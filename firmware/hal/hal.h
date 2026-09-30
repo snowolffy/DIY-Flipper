@@ -51,6 +51,8 @@ class Storage {
   virtual bool write(Volume v, const std::string& path, const std::string& data) = 0;
   // Names (not paths) of the files directly inside dir, sorted. False if dir doesn't exist.
   virtual bool list(Volume v, const std::string& dir, std::vector<std::string>& names) const = 0;
+  // Same for the folders directly inside dir.
+  virtual bool listDirs(Volume v, const std::string& dir, std::vector<std::string>& names) const = 0;
 };
 
 // Battery voltage from the ADC divider, already scaled to cell millivolts. 0 means no usable reading.

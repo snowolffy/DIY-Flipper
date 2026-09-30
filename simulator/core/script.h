@@ -24,6 +24,8 @@
 //   wifi       any of: networks: [{ssid, rssi, secured}], next_connect_succeeds: bool, latency_ms
 //   ble_host   action: connect|disconnect, name
 //   ble_bonds  full: true|false (fill the bond list with placeholder devices, or clear them)
+//   import     file: path relative to the project folder (.b1i, .b1f or theme .zip), as Import Asset does
+//   restart    cold_boot: true|false (default true) - power-cycle the device
 //   dump       path: where to write the current screen as a .pbm
 //   assert     check + fields:
 //                menu_path_equals          value
@@ -33,7 +35,7 @@
 //                storage_file_contains     path, text
 //                state_equals              field, value. Fields: invert, battery_percent, sd_present,
 //                                          ir_listening, ir_sent_count, nfc_polling, wifi_state, wifi_ssid,
-//                                          wifi_password, ble_state, ble_host, ble_keys_sent
+//                                          wifi_password, ble_state, ble_host, ble_keys_sent, theme
 #pragma once
 
 #include <filesystem>

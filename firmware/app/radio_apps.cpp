@@ -8,7 +8,7 @@
 
 #include "app/minijson.h"
 #include "app/screens.h"
-#include "assets/assets.h"
+#include "app/theme.h"
 
 namespace app {
 
@@ -34,17 +34,17 @@ std::string stripExt(const std::string& name) {
 // Title row + wrapped small-font text, the layout every "waiting for something" screen uses.
 int16_t drawMessage(Framebuffer& fb, const char* title, const char* body) {
   using namespace ui;
-  drawText(fb, assets::kFontLarge, kPad, kStatusH + 2, title);
+  drawText(fb, theme::large(), kPad, kStatusH + 2, title);
   fb.hline(0, kStatusH + kTitleH - 1, kScreenW, true);
-  return drawWrapped(fb, assets::kFontSmall, kPad, kStatusH + kTitleH + 3, kScreenW - kPad * 2, kDetailRowH, body);
+  return drawWrapped(fb, theme::small(), kPad, kStatusH + kTitleH + 3, kScreenW - kPad * 2, kDetailRowH, body);
 }
 
 // Label/value rows in the Detail layout, starting at y. Returns the y below the last row.
 int16_t drawRows(Framebuffer& fb, int16_t y, const DetailScreen::Rows& rows) {
   using namespace ui;
   for (const auto& kv : rows) {
-    drawText(fb, assets::kFontSmall, kPad, y, kv.first.c_str());
-    drawTextRight(fb, assets::kFontSmall, kScreenW - kPad, y, kv.second.c_str());
+    drawText(fb, theme::small(), kPad, y, kv.first.c_str());
+    drawTextRight(fb, theme::small(), kScreenW - kPad, y, kv.second.c_str());
     y += kDetailRowH;
   }
   return y;
@@ -118,7 +118,7 @@ class IrLearnScreen : public Screen {
     }
     int16_t y = drawMessage(fb, "Learn", "Got it.");
     y = drawRows(fb, y + 2, signalRows(signal_));
-    drawWrapped(fb, assets::kFontSmall, ui::kPad, y + 6, ui::kScreenW - ui::kPad * 2, ui::kDetailRowH,
+    drawWrapped(fb, theme::small(), ui::kPad, y + 6, ui::kScreenW - ui::kPad * 2, ui::kDetailRowH,
                 error_.empty() ? "OK save   Back retry" : error_.c_str());
   }
 
@@ -164,7 +164,7 @@ class IrRemoteScreen : public Screen {
     y = drawRows(fb, y, signalRows(signal_));
     DetailScreen::Rows status = {{"Sent", std::to_string(sent_) + (sent_ == 1 ? " time" : " times")}};
     y = drawRows(fb, y + 4, status);
-    ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 6, "OK SEND   BACK");
+    ui::drawText(fb, theme::small(), ui::kPad, y + 6, "OK SEND   BACK");
   }
 
  private:
@@ -220,9 +220,9 @@ class NfcReadScreen : public Screen {
     }
     int16_t y = drawMessage(fb, "Read card", "");
     y = drawRows(fb, y, {{"Type", card_.type}, {"Blocks", std::to_string(card_.blocks.size())}});
-    ui::drawText(fb, assets::kFontSmall, ui::kPad, y, "UID");
-    ui::drawTextRight(fb, assets::kFontSmall, ui::kScreenW - ui::kPad, y + ui::kDetailRowH, card_.uid.c_str());
-    drawWrapped(fb, assets::kFontSmall, ui::kPad, y + 2 * ui::kDetailRowH + 6, ui::kScreenW - ui::kPad * 2,
+    ui::drawText(fb, theme::small(), ui::kPad, y, "UID");
+    ui::drawTextRight(fb, theme::small(), ui::kScreenW - ui::kPad, y + ui::kDetailRowH, card_.uid.c_str());
+    drawWrapped(fb, theme::small(), ui::kPad, y + 2 * ui::kDetailRowH + 6, ui::kScreenW - ui::kPad * 2,
                 ui::kDetailRowH, error_.empty() ? "OK save   Back retry" : error_.c_str());
   }
 
@@ -375,19 +375,19 @@ class BluetoothRemoteScreen : public Screen {
         const unsigned pk = (unsigned)(ble.passkey() % 1000000u);
         char code[16];
         std::snprintf(code, sizeof(code), "%03u %03u", pk / 1000, pk % 1000);
-        ui::drawText(fb, assets::kFontLarge, (ui::kScreenW - ui::textWidth(assets::kFontLarge, code)) / 2, y + 6, code);
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 24, "OK PAIR   BACK REJECT");
+        ui::drawText(fb, theme::large(), (ui::kScreenW - ui::textWidth(theme::large(), code)) / 2, y + 6, code);
+        ui::drawText(fb, theme::small(), ui::kPad, y + 24, "OK PAIR   BACK REJECT");
         break;
       }
       case hal::BleState::Connected: {
         int16_t y = drawMessage(fb, "Connected", "");
         y = drawRows(fb, y, {{"Host", ble.hostName()}});
         y += 6;
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y, "<  PREVIOUS");
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 10, "OK PLAY / PAUSE");
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 20, ">  NEXT");
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 30, "HOLD < >  VOLUME");
-        ui::drawText(fb, assets::kFontSmall, ui::kPad, y + 46, "BACK  DISCONNECT");
+        ui::drawText(fb, theme::small(), ui::kPad, y, "<  PREVIOUS");
+        ui::drawText(fb, theme::small(), ui::kPad, y + 10, "OK PLAY / PAUSE");
+        ui::drawText(fb, theme::small(), ui::kPad, y + 20, ">  NEXT");
+        ui::drawText(fb, theme::small(), ui::kPad, y + 30, "HOLD < >  VOLUME");
+        ui::drawText(fb, theme::small(), ui::kPad, y + 46, "BACK  DISCONNECT");
         break;
       }
       case hal::BleState::BondListFull:

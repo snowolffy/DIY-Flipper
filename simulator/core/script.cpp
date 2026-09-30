@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "app/theme.h"
+#include "core/importer.h"
 #include "nlohmann/json.hpp"
 
 namespace fs = std::filesystem;
@@ -67,7 +69,7 @@ const char* bleStateName(hal::BleState s) {
 
 const char* kStateFields[] = {"invert",     "battery_percent", "sd_present", "ir_listening", "ir_sent_count",
                               "nfc_polling", "wifi_state",     "wifi_ssid",  "wifi_password", "ble_state",
-                              "ble_host",   "ble_keys_sent"};
+                              "ble_host",   "ble_keys_sent",   "theme"};
 
 json stateField(Simulator& s, const std::string& f) {
   if (f == "invert") return s.app().settings().invert;
@@ -82,6 +84,7 @@ json stateField(Simulator& s, const std::string& f) {
   if (f == "ble_state") return bleStateName(s.ble().state());
   if (f == "ble_host") return s.ble().hostName();
   if (f == "ble_keys_sent") return s.ble().keysSent();
+  if (f == "theme") return theme::activeName();
   return nullptr;
 }
 
@@ -242,6 +245,19 @@ bool loadScript(const fs::path& path, Script& out, std::string& err) {
     } else if (type == "ble_bonds") {
       const bool full = e.value("full", true);
       add(t, [full](Simulator& s, std::vector<AssertResult>&) { s.ble().setBondListFull(full); });
+    } else if (type == "import") {
+      // scripts live in <project>/scripts/, so files are relative to the script folder's parent
+      const fs::path file = path.parent_path().parent_path() / str(e, "file");
+      const std::string label = str(e, "file");
+      add(t, [t, file, label](Simulator& s, std::vector<AssertResult>& r) {
+        const ImportResult res = importAsset(file, s.storage());
+        std::string detail = res.ok ? std::to_string(res.written.size()) + " files" : res.error;
+        for (const auto& w : res.warnings) detail += "; " + w;
+        r.push_back({t, "import " + label, res.ok, detail});
+      });
+    } else if (type == "restart") {
+      const bool cold = e.value("cold_boot", true);
+      add(t, [cold](Simulator& s, std::vector<AssertResult>&) { s.restart(cold); });
     } else if (type == "dump") {
       const fs::path p = str(e, "path");
       add(t, [p](Simulator& s, std::vector<AssertResult>&) {

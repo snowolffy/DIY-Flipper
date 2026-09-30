@@ -1,0 +1,26 @@
+{
+  "name": "theme-import",
+  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
+  "events": [
+    { "t_ms": 0,    "type": "import", "file": "fixtures/night-theme.zip" },
+    { "t_ms": 0,    "type": "import", "file": "fixtures/moon.b1i" },
+    { "t_ms": 50,   "type": "assert", "check": "storage_file_exists", "path": "sd:/system/theme/night/theme.ini" },
+    { "t_ms": 50,   "type": "assert", "check": "storage_file_exists", "path": "sd:/media/moon.b1i" },
+    { "t_ms": 50,   "type": "assert", "check": "state_equals", "field": "theme", "value": "" },
+    { "t_ms": 100,  "type": "button", "button": "LEFT" },
+    { "t_ms": 300,  "type": "button", "button": "OK" },
+    { "t_ms": 500,  "type": "button", "button": "LEFT" },
+    { "t_ms": 700,  "type": "button", "button": "OK" },
+    { "t_ms": 900,  "type": "assert", "check": "menu_path_equals", "value": "Main/Settings/Theme" },
+    { "t_ms": 950,  "type": "button", "button": "RIGHT" },
+    { "t_ms": 1100, "type": "button", "button": "OK" },
+    { "t_ms": 1300, "type": "assert", "check": "state_equals", "field": "theme", "value": "night" },
+    { "t_ms": 1300, "type": "assert", "check": "menu_path_equals", "value": "Main/Settings/Theme" },
+    { "t_ms": 1400, "type": "button", "button": "CANCEL" },
+    { "t_ms": 1600, "type": "assert", "check": "menu_path_equals", "value": "Main/Settings" },
+    { "t_ms": 1600, "type": "assert", "check": "storage_file_contains", "path": "flash:/settings.ini", "text": "theme=night" },
+    { "t_ms": 1700, "type": "restart", "cold_boot": true },
+    { "t_ms": 1900, "type": "assert", "check": "state_equals", "field": "theme", "value": "night" },
+    { "t_ms": 1900, "type": "assert", "check": "framebuffer_hash_equals", "value": "bdbe2bb0b6a1dc06" }
+  ]
+}

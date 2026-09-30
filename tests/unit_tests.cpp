@@ -2,6 +2,7 @@
 // failure and exits non-zero if any.
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -9,7 +10,10 @@
 #include "app/buttons.h"
 #include "app/minijson.h"
 #include "app/settings.h"
+#include "app/theme.h"
+#include "core/importer.h"
 #include "core/mocks.h"
+#include "miniz/miniz.h"
 
 static int failures = 0;
 #define CHECK(cond)                                                    \
@@ -146,7 +150,58 @@ static void storageList() {
   fs::remove_all(dir);
 }
 
+static void themeFiles() {
+  std::string err;
+  theme::Image img;
+  CHECK(!theme::parseB1i("B1I", img, err));
+  const std::string ok = std::string("B1I\x01", 4) + std::string("\x02\x00\x02\x00\x01\x00\x00\x00", 8) + "\x0F";
+  CHECK(theme::parseB1i(ok, img, err) && img.w == 2 && img.h == 2 && img.data.size() == 1);
+  CHECK(!theme::parseB1i(std::string("B1I\x02", 4) + ok.substr(4), img, err));  // unknown version
+  theme::Font font;
+  CHECK(!theme::parseB1f(std::string("B1F\x01\x06\x08\x05\x00", 8) + "ab", font, err));  // truncated
+}
+
+static void importer() {
+  namespace fs = std::filesystem;
+  const fs::path dir = fs::temp_directory_path() / "diyf-unit-import";
+  fs::remove_all(dir);
+  fs::create_directories(dir);
+  sim::MockStorage st(dir / "storage");
+
+  // a zip that tries to write outside the theme folder
+  const fs::path evil = dir / "evil.zip";
+  mz_zip_archive z{};
+  CHECK(mz_zip_writer_init_file(&z, evil.string().c_str(), 0));
+  const char ini[] = "[theme]\nname=x\n";
+  mz_zip_writer_add_mem(&z, "t/theme.ini", ini, sizeof(ini) - 1, MZ_DEFAULT_COMPRESSION);
+  mz_zip_writer_add_mem(&z, "t/../../../escaped.txt", "x", 1, MZ_DEFAULT_COMPRESSION);
+  mz_zip_writer_finalize_archive(&z);
+  mz_zip_writer_end(&z);
+  const sim::ImportResult r = sim::importAsset(evil, st);
+  CHECK(r.ok && r.themes.size() == 1 && r.themes[0] == "t");
+  CHECK(!fs::exists(dir / "escaped.txt") && !fs::exists(dir / "storage" / "escaped.txt"));
+  CHECK(!r.warnings.empty());
+
+  // no theme.ini at all
+  const fs::path empty = dir / "empty.zip";
+  mz_zip_archive z2{};
+  CHECK(mz_zip_writer_init_file(&z2, empty.string().c_str(), 0));
+  mz_zip_writer_add_mem(&z2, "readme.txt", "hi", 2, MZ_DEFAULT_COMPRESSION);
+  mz_zip_writer_finalize_archive(&z2);
+  mz_zip_writer_end(&z2);
+  CHECK(!sim::importAsset(empty, st).ok);
+
+  // wrong extension, and a .b1i that isn't one
+  CHECK(!sim::importAsset(dir / "picture.png", st).ok);
+  { std::ofstream(dir / "bad.b1i") << "hello"; }
+  CHECK(!sim::importAsset(dir / "bad.b1i", st).ok);
+  CHECK(!fs::exists(dir / "storage" / "sd" / "media" / "bad.b1i"));
+  fs::remove_all(dir);
+}
+
 int main() {
+  themeFiles();
+  importer();
   miniJson();
   storageList();
   batteryTable();

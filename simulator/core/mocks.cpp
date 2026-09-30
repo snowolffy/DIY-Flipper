@@ -109,18 +109,31 @@ bool MockStorage::write(hal::Volume v, const std::string& path, const std::strin
   return (bool)f;
 }
 
-bool MockStorage::list(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const {
+namespace {
+
+bool listEntries(const fs::path& p, bool dirs, std::vector<std::string>& names) {
   names.clear();
-  if (!present(v)) return false;
-  const fs::path p = hostPath(v, dir);
   std::error_code ec;
   if (p.empty() || !fs::is_directory(p, ec)) return false;
   for (const auto& e : fs::directory_iterator(p, ec)) {
     const std::string name = e.path().filename().string();
-    if (e.is_regular_file(ec) && name != ".gitkeep") names.push_back(name);
+    const bool match = dirs ? e.is_directory(ec) : e.is_regular_file(ec);
+    if (match && name != ".gitkeep") names.push_back(name);
   }
   std::sort(names.begin(), names.end());
   return true;
+}
+
+}  // namespace
+
+bool MockStorage::list(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const {
+  names.clear();
+  return present(v) && listEntries(hostPath(v, dir), false, names);
+}
+
+bool MockStorage::listDirs(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const {
+  names.clear();
+  return present(v) && listEntries(hostPath(v, dir), true, names);
 }
 
 // ---------------- battery ----------------

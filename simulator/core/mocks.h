@@ -60,6 +60,7 @@ class MockStorage : public hal::Storage {
   bool read(hal::Volume v, const std::string& path, std::string& out) const override;
   bool write(hal::Volume v, const std::string& path, const std::string& data) override;
   bool list(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const override;
+  bool listDirs(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const override;
 
   void setSdPresent(bool present) { sdPresent_ = present; }
   void setFailWrites(bool fail) { failWrites_ = fail; }

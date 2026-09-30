@@ -30,6 +30,7 @@ void Settings::load(const hal::Storage& storage) {
     const std::string key = trim(line.substr(0, eq));
     const std::string value = trim(line.substr(eq + 1));
     if (key == "invert") invert = value == "1";
+    else if (key == "theme") theme = value;
   }
 }
 
@@ -37,6 +38,7 @@ bool Settings::save(hal::Storage& storage) const {
   std::string text = "invert=";
   text += invert ? "1" : "0";
   text += "\n";
+  if (!theme.empty()) text += "theme=" + theme + "\n";
   return storage.write(hal::Volume::Flash, kPath, text);
 }
 

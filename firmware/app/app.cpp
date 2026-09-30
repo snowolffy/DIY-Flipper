@@ -3,7 +3,7 @@
 #include <cstdio>
 
 #include "app/screens.h"
-#include "assets/assets.h"
+#include "app/theme.h"
 #include "ui/gfx.h"
 
 namespace app {
@@ -13,6 +13,13 @@ App::App(hal::Hal& hal) : hal_(hal) {}
 void App::begin(bool coldBoot) {
   now_ = hal_.clock.millis();
   settings_.load(hal_.storage);
+  // a theme that vanished from the SD card (or has no theme.ini) falls back to the built-in set
+  theme::useBuiltIn();
+  if (!settings_.theme.empty()) {
+    std::string err;
+    std::vector<std::string> warnings;
+    theme::load(hal_.storage, settings_.theme, err, warnings);
+  }
   battery_.update(now_, hal_.battery);
   if (coldBoot) push(std::make_unique<SplashScreen>());
   else push(makeMainMenu());
@@ -101,30 +108,30 @@ void App::drawStatusBar(const Screen& top) {
   }
 
   // right slot, right to left: battery, then WiFi and Bluetooth icons only while those radios are on
-  const PicEntry& bat = assets::kIconBattery;
+  const PicEntry& bat = theme::icon("battery");
   const int16_t batX = kScreenW - kPad - bat.w;
   int16_t iconX = batX;
   if (hal_.wifi.state() != hal::WifiState::Off) {
-    iconX -= 2 + assets::kIconWifi.w;
-    drawPic(fb_, iconX, 2, assets::kIconWifi);
+    iconX -= 2 + theme::icon("wifi").w;
+    drawPic(fb_, iconX, 2, theme::icon("wifi"));
   }
   if (hal_.ble.state() != hal::BleState::Off) {
-    iconX -= 2 + assets::kIconBluetooth.w;
-    drawPic(fb_, iconX, 2, assets::kIconBluetooth);
+    iconX -= 2 + theme::icon("bluetooth").w;
+    drawPic(fb_, iconX, 2, theme::icon("bluetooth"));
   }
   drawPic(fb_, batX, 2, bat);
   // the icon's inner fill is 4 columns (x 2-5, rows 3-4); show the charge in quarters
   fb_.fillRect(batX + 2, 2 + 3, 4, 2, false);
   const int pct = battery_.percent();
   if (pct < 0) {
-    drawText(fb_, assets::kFontSmall, iconX - assets::kFontSmall.w - 1, 2, "?");
-    iconX -= assets::kFontSmall.w + 1;
+    drawText(fb_, theme::small(), iconX - theme::small().w - 1, 2, "?");
+    iconX -= theme::small().w + 1;
   } else {
     const int cols = pct == 0 ? 0 : (pct + 24) / 25;
     fb_.fillRect(batX + 2, 2 + 3, (int16_t)cols, 2, true);
   }
 
-  drawText(fb_, assets::kFontSmall, kPad, 2, left, true, iconX - 4);
+  drawText(fb_, theme::small(), kPad, 2, left, true, iconX - 4);
 }
 
 }  // namespace app

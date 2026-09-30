@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(diy_flipper LANGUAGES CXX)
+project(diy_flipper LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,6 +28,7 @@ add_library(firmware_core STATIC
   firmware/app/radio_apps.cpp
   firmware/app/screens.cpp
   firmware/app/settings.cpp
+  firmware/app/theme.cpp
   firmware/assets/assets.cpp
 )
 target_include_directories(firmware_core PUBLIC firmware)
@@ -35,15 +36,20 @@ target_include_directories(firmware_core PUBLIC firmware)
 target_include_directories(firmware_core PRIVATE firmware/platform/host)
 target_link_libraries(firmware_core PRIVATE diyf_warnings)
 
-# ---- simulator core: mocks, virtual clock, script runner ----
+# ---- zip reading for Import Asset (vendored miniz 3.0.2, MIT) ----
+add_library(miniz STATIC simulator/third_party/miniz/miniz.c)
+target_include_directories(miniz PUBLIC simulator/third_party)
+
+# ---- simulator core: mocks, virtual clock, script runner, asset importer ----
 add_library(sim_core STATIC
+  simulator/core/importer.cpp
   simulator/core/mocks.cpp
   simulator/core/simulator.cpp
   simulator/core/script.cpp
 )
 target_include_directories(sim_core PUBLIC simulator)
 target_include_directories(sim_core SYSTEM PRIVATE simulator/third_party)
-target_link_libraries(sim_core PUBLIC firmware_core PRIVATE diyf_warnings)
+target_link_libraries(sim_core PUBLIC firmware_core PRIVATE miniz diyf_warnings)
 
 # ---- headless runner (cloud / CI) ----
 add_executable(sim_headless simulator/headless/main.cpp)
@@ -51,7 +57,7 @@ target_link_libraries(sim_headless PRIVATE sim_core diyf_warnings)
 
 # ---- unit tests for firmware logic that scripts can't reach precisely ----
 add_executable(unit_tests tests/unit_tests.cpp)
-target_link_libraries(unit_tests PRIVATE sim_core diyf_warnings)
+target_link_libraries(unit_tests PRIVATE sim_core miniz diyf_warnings)
 
 enable_testing()
 add_test(NAME unit_tests COMMAND unit_tests)

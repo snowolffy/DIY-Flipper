@@ -32,7 +32,7 @@ class ListScreen : public Screen {
  public:
   struct Item {
     std::string label;
-    const PicEntry* icon = nullptr;
+    const char* icon = nullptr;  // theme icon key, e.g. "ir"
     std::function<void(App&)> onOk;
     std::function<std::string(App&)> value;  // optional, drawn right-aligned in the small font
   };
@@ -102,6 +102,19 @@ class TextInputScreen : public Screen {
   std::string title_, prompt_, text_;
   Done onDone_;
   int pick_ = 0;  // index into kCharset
+};
+
+// Title row + a paragraph of wrapped small text; OK or Back closes it.
+class NoticeScreen : public Screen {
+ public:
+  NoticeScreen(std::string title, std::string text) : title_(std::move(title)), text_(std::move(text)) {}
+  const char* title() const override { return title_.c_str(); }
+  bool hasTitleRow() const override { return true; }
+  void onEvent(App& app, const ButtonEvent& e) override;
+  void draw(App& app, ui::Framebuffer& fb) override;
+
+ private:
+  std::string title_, text_;
 };
 
 std::unique_ptr<Screen> makeMainMenu();

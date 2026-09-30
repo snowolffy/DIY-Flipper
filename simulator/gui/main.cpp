@@ -5,7 +5,10 @@
 //   sim_gui [--project DIR] [--scale N] [--script FILE.json] [--tab NAME] [--screenshot FILE.bmp --frames N]
 //
 //   --script   play a mock-script as soon as the window opens (same as Scripts > Run here)
-//   --tab      open the Mock control panel on this tab: power, ir, nfc, wifi, bluetooth, scripts
+//   --tab      open the Mock control panel on this tab: project, power, ir, nfc, wifi, bluetooth, scripts
+//   --import   import a Flipper UI Studio export (.zip / .b1i / .b1f) into the project's SD card at start
+//
+// Drop a folder on the window to open it as the project; drop an export to import it.
 //
 // Keys: Left/Up = LEFT, Right/Down = RIGHT, Enter/Z = OK, Backspace/Esc/X = CANCEL, P = POWER,
 //       F12 = save the device screen as a BMP in <project>/screenshots.
@@ -16,13 +19,18 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
+#include <memory>
 #include <string>
+#include <vector>
 
+#include "core/importer.h"
 #include "core/simulator.h"
 #include "gui/panels.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "misc/cpp/imgui_stdlib.h"
 
 namespace fs = std::filesystem;
 
@@ -30,11 +38,13 @@ namespace {
 
 struct Options {
   fs::path project = "sim";
+  bool projectGiven = false;
   int scale = 3;
   fs::path screenshot;  // write the whole window to this BMP after `frames` frames, then quit
   int frames = 0;
   fs::path script;
   std::string tab;
+  fs::path import;
 };
 
 // Paper and ink of the panel as the studio draws them, so screens look the same in both tools.
@@ -46,12 +56,16 @@ const char* kSdFolders[] = {"ir", "nfc", "games", "media", "system"};
 bool parseArgs(int argc, char** argv, Options& o) {
   for (int i = 1; i < argc; i++) {
     const std::string a = argv[i];
-    if (a == "--project" && i + 1 < argc) o.project = argv[++i];
+    if (a == "--project" && i + 1 < argc) {
+      o.project = argv[++i];
+      o.projectGiven = true;
+    }
     else if (a == "--scale" && i + 1 < argc) o.scale = std::max(1, std::min(8, std::atoi(argv[++i])));
     else if (a == "--screenshot" && i + 1 < argc) o.screenshot = argv[++i];
     else if (a == "--frames" && i + 1 < argc) o.frames = std::atoi(argv[++i]);
     else if (a == "--script" && i + 1 < argc) o.script = argv[++i];
     else if (a == "--tab" && i + 1 < argc) o.tab = argv[++i];
+    else if (a == "--import" && i + 1 < argc) o.import = fs::u8path(argv[++i]);
     else return false;
   }
   return true;
@@ -84,6 +98,40 @@ hal::DateTime pcLocalTime() {
 void fillPixels(const sim::MockDisplay& disp, uint32_t* px) {
   for (int16_t y = 0; y < ui::kScreenH; y++)
     for (int16_t x = 0; x < ui::kScreenW; x++) px[y * ui::kScreenW + x] = disp.lit(x, y) ? kLit : kDark;
+}
+
+// ---- recent project folders, one per line in SDL's per-user preferences folder ----
+fs::path recentFile() {
+  char* pref = SDL_GetPrefPath("DIY-Flipper", "Simulator");
+  if (!pref) return {};
+  const fs::path p = fs::u8path(pref) / "recent.txt";
+  SDL_free(pref);
+  return p;
+}
+
+std::vector<std::string> loadRecent() {
+  std::vector<std::string> out;
+  std::ifstream f(recentFile());
+  std::string line;
+  while (std::getline(f, line))
+    if (!line.empty()) out.push_back(line);
+  return out;
+}
+
+void saveRecent(const std::vector<std::string>& recent) {
+  const fs::path p = recentFile();
+  if (p.empty()) return;
+  std::ofstream f(p, std::ios::trunc);
+  for (const auto& r : recent) f << r << "\n";
+}
+
+void rememberProject(std::vector<std::string>& recent, const fs::path& project) {
+  std::error_code ec;
+  const std::string abs = fs::absolute(project, ec).lexically_normal().u8string();
+  recent.erase(std::remove(recent.begin(), recent.end(), abs), recent.end());
+  recent.insert(recent.begin(), abs);
+  if (recent.size() > 8) recent.resize(8);
+  saveRecent(recent);
 }
 
 // Saves the device screen at 4x as a BMP and returns its path (empty on failure).
@@ -127,10 +175,13 @@ int main(int argc, char** argv) {
   Options opt;
   if (!parseArgs(argc, argv, opt)) {
     std::fprintf(stderr,
-                 "usage: sim_gui [--project DIR] [--scale N] [--script FILE.json] [--tab NAME] "
+                 "usage: sim_gui [--project DIR] [--scale N] [--script FILE.json] [--tab NAME] [--import FILE] "
                  "[--screenshot FILE.bmp --frames N]\n");
     return 2;
   }
+  std::vector<std::string> recent = loadRecent();
+  // no --project: reopen the last project if it still exists, else ./sim
+  if (!opt.projectGiven && !recent.empty() && fs::is_directory(fs::u8path(recent.front()))) opt.project = fs::u8path(recent.front());
   ensureProjectFolders(opt.project);
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
@@ -166,37 +217,60 @@ int main(int argc, char** argv) {
   SDL_SetTextureScaleMode(screenTex, SDL_ScaleModeNearest);
   static uint32_t pixels[ui::kScreenW * ui::kScreenH];
 
-  sim::Simulator s(opt.project / "storage");
-  s.rtc().set(pcLocalTime());
-  s.battery().setPercent(80);
-  sim::Script startScript;
-  std::string startError;
-  const bool haveStartScript = !opt.script.empty() && sim::loadScript(opt.script, startScript, startError) &&
-                               sim::copySeed(opt.project, startScript.init.storageSeed, opt.project / "storage", startError);
-  if (haveStartScript) sim::applyInitialState(startScript.init, s);
-  s.boot(haveStartScript ? startScript.init.coldBoot : true);
-
   int batteryPct = 80;
   bool batteryUnknown = false;
   bool rtcMissing = false;
   bool sdPresent = true;
   bool failWrites = false;
+  std::unique_ptr<sim::Simulator> simPtr;
+  fs::path project;
+  // A fresh device for a project folder: storage is that folder's storage/, mocks start from defaults.
+  auto openProject = [&](const fs::path& dir, bool coldBoot) {
+    ensureProjectFolders(dir);
+    project = dir;
+    simPtr = std::make_unique<sim::Simulator>(dir / "storage");
+    simPtr->rtc().set(pcLocalTime());
+    batteryPct = 80;
+    batteryUnknown = rtcMissing = failWrites = false;
+    sdPresent = true;
+    simPtr->battery().setPercent(batteryPct);
+    simPtr->boot(coldBoot);
+    rememberProject(recent, dir);
+    SDL_SetWindowTitle(window, ("DIY Flipper Simulator - " + fs::absolute(dir).filename().u8string()).c_str());
+  };
+
+  sim::Script startScript;
+  std::string startError;
+  const bool haveStartScript = !opt.script.empty() && sim::loadScript(opt.script, startScript, startError) &&
+                               sim::copySeed(opt.project, startScript.init.storageSeed, opt.project / "storage", startError);
+  openProject(opt.project, haveStartScript ? startScript.init.coldBoot : true);
+  if (haveStartScript) sim::applyInitialState(startScript.init, *simPtr);
+
   std::string lastShot;
+  std::string openPath, importPath;
+  sim::ImportResult lastImport;
+  std::string lastImportFile;
+  fs::path pendingOpen, pendingImport;
   gui::RadioPanelState radios;
   gui::ScriptPanelState scripts;
   bool uiDown[hal::kButtonCount] = {};  // last button state written by keyboard/mouse
   int frame = 0;
   if (!opt.script.empty()) {
-    if (haveStartScript) scripts.player.start(std::move(startScript), s.now());
+    if (haveStartScript) scripts.player.start(std::move(startScript), simPtr->now());
     else scripts.message = startError;
     if (opt.tab.empty()) opt.tab = "scripts";
   }
+  std::string pendingTab = opt.tab;
   auto tabFlags = [&](const char* id) {
-    // select the requested tab on the first frame only, then leave it to the user
-    return frame == 0 && opt.tab == id ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+    // select a requested tab once, then leave it to the user
+    return pendingTab == id ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
   };
+  if (!opt.import.empty()) {
+    pendingImport = opt.import;
+  }
 
-  const uint64_t start = SDL_GetTicks64();
+  uint64_t start = SDL_GetTicks64();
+  int frameStart = 0;
   bool running = true;
   while (running) {
     SDL_Event ev;
@@ -208,7 +282,29 @@ int main(int argc, char** argv) {
           ev.window.windowID == SDL_GetWindowID(window))
         running = false;
       if (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_F12 && !ev.key.repeat) saveShot = true;
+      if (ev.type == SDL_DROPFILE) {
+        // a folder opens as a project; a file is imported into this project's SD card
+        const fs::path dropped = fs::u8path(ev.drop.file);
+        SDL_free(ev.drop.file);
+        if (fs::is_directory(dropped)) pendingOpen = dropped;
+        else pendingImport = dropped;
+      }
     }
+    if (!pendingOpen.empty()) {
+      scripts.player.stop();
+      openProject(pendingOpen, true);
+      pendingOpen.clear();
+      start = SDL_GetTicks64();
+      frameStart = frame;
+      pendingTab = "project";
+    }
+    if (!pendingImport.empty()) {
+      lastImport = sim::importAsset(pendingImport, simPtr->storage());
+      lastImportFile = pendingImport.filename().u8string();
+      pendingImport.clear();
+      pendingTab = "project";
+    }
+    sim::Simulator& s = *simPtr;
 
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
@@ -253,6 +349,62 @@ int main(int argc, char** argv) {
     ImGui::SameLine();
     ImGui::TextDisabled("  uptime %.1f s", s.now() / 1000.0);
     const bool tabs = ImGui::BeginTabBar("mocks");
+    if (tabs && ImGui::BeginTabItem("Project", nullptr, tabFlags("project"))) {
+      std::error_code ec;
+      ImGui::TextWrapped("Folder: %s", fs::absolute(project, ec).u8string().c_str());
+      ImGui::SetNextItemWidth(260);
+      ImGui::InputTextWithHint("##open", "path to a project folder", &openPath);
+      ImGui::SameLine();
+      if (ImGui::Button("Open") && !openPath.empty()) {
+        if (fs::is_directory(fs::u8path(openPath))) pendingOpen = fs::u8path(openPath);
+        else lastImport = {false, "no such folder: " + openPath, {}, {}, {}};
+      }
+      ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+      ImGui::TextWrapped("Or drop a folder onto the window. Missing storage folders are created.");
+      ImGui::PopStyleColor();
+      if (ImGui::CollapsingHeader("Recent", ImGuiTreeNodeFlags_DefaultOpen)) {
+        int remove = -1;
+        for (int i = 0; i < (int)recent.size(); i++) {
+          ImGui::PushID(i);
+          const bool current = fs::equivalent(fs::u8path(recent[i]), project, ec);
+          ImGui::BeginDisabled(current || !fs::is_directory(fs::u8path(recent[i]), ec));
+          if (ImGui::Selectable(recent[i].c_str(), current, 0, ImVec2(ImGui::GetContentRegionAvail().x - 30, 0)))
+            pendingOpen = fs::u8path(recent[i]);
+          ImGui::EndDisabled();
+          if (!current) {
+            ImGui::SameLine();
+            if (ImGui::SmallButton("x")) remove = i;
+          }
+          ImGui::PopID();
+        }
+        if (remove >= 0) {
+          recent.erase(recent.begin() + remove);
+          saveRecent(recent);
+        }
+      }
+      if (ImGui::CollapsingHeader("Import asset", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextWrapped("Exports from Flipper UI Studio go onto this project's SD card: theme .zip to "
+                           "/system/theme/<name>, .b1i to /media, .b1f to /system/fonts. Drop a file on the window, "
+                           "or give its path.");
+        ImGui::SetNextItemWidth(260);
+        ImGui::InputTextWithHint("##import", "path to a .zip, .b1i or .b1f", &importPath);
+        ImGui::SameLine();
+        if (ImGui::Button("Import") && !importPath.empty()) pendingImport = fs::u8path(importPath);
+        if (!lastImportFile.empty() || !lastImport.error.empty()) {
+          ImGui::Separator();
+          if (lastImport.ok) {
+            ImGui::TextColored(ImVec4(0.45f, 0.85f, 0.55f, 1), "Imported %s", lastImportFile.c_str());
+            for (const auto& p : lastImport.written) ImGui::BulletText("%s", p.c_str());
+            if (!lastImport.themes.empty())
+              ImGui::TextWrapped("Pick it on the device: Settings > Theme.");
+          } else {
+            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.4f, 1), "Not imported: %s", lastImport.error.c_str());
+          }
+          for (const auto& wn : lastImport.warnings) ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.35f, 1), "! %s", wn.c_str());
+        }
+      }
+      ImGui::EndTabItem();
+    }
     if (tabs && ImGui::BeginTabItem("Power & storage", nullptr, tabFlags("power"))) {
     if (ImGui::CollapsingHeader("Battery", ImGuiTreeNodeFlags_DefaultOpen)) {
       ImGui::BeginDisabled(batteryUnknown);
@@ -283,7 +435,7 @@ int main(int argc, char** argv) {
       if (ImGui::Checkbox("SD card inserted", &sdPresent)) s.storage().setSdPresent(sdPresent);
       if (ImGui::Checkbox("Fail every write", &failWrites)) s.storage().setFailWrites(failWrites);
       std::error_code ec;
-      ImGui::TextWrapped("Folder: %s", fs::absolute(opt.project / "storage", ec).string().c_str());
+      ImGui::TextWrapped("Folder: %s", fs::absolute(project / "storage", ec).u8string().c_str());
     }
 
     if (ImGui::CollapsingHeader("Firmware state", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -311,14 +463,15 @@ int main(int argc, char** argv) {
       ImGui::EndTabItem();
     }
     if (tabs && ImGui::BeginTabItem("Scripts", nullptr, tabFlags("scripts"))) {
-      gui::drawScriptPanel(s, scripts, opt.project);
+      gui::drawScriptPanel(s, scripts, project);
       ImGui::EndTabItem();
     }
     if (tabs) ImGui::EndTabBar();
+    pendingTab.clear();
     ImGui::End();
 
     if (saveShot) {
-      lastShot = saveScreen(s.display(), opt.project);
+      lastShot = saveScreen(s.display(), project);
       if (lastShot.empty()) lastShot = "(couldn't save)";
     }
 
@@ -343,7 +496,8 @@ int main(int argc, char** argv) {
     }
 
     // ---- run the firmware up to real time (screenshot mode steps a fixed 1/60 s so output is repeatable) ----
-    const uint64_t elapsed = opt.screenshot.empty() ? SDL_GetTicks64() - start : (uint64_t)frame * 1000 / 60;
+    const uint64_t elapsed =
+        opt.screenshot.empty() ? SDL_GetTicks64() - start : (uint64_t)(frame - frameStart) * 1000 / 60;
     scripts.player.runUntil(s, (uint32_t)elapsed);
     s.advanceTo((uint32_t)elapsed);
 

@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "assets/assets.h"
+#include "app/theme.h"
 
 namespace app {
 
@@ -35,7 +35,7 @@ void SplashScreen::onTick(App& app) {
   }
 }
 
-void SplashScreen::draw(App&, Framebuffer& fb) { ui::drawPic(fb, 0, 0, assets::kBootSplash); }
+void SplashScreen::draw(App&, Framebuffer& fb) { ui::drawPic(fb, 0, 0, theme::splash()); }
 
 // ---------------- List ----------------
 
@@ -84,8 +84,8 @@ int ListScreen::marqueeOffset(uint32_t now, int overflowChars) const {
 
 void ListScreen::draw(App& app, Framebuffer& fb) {
   using namespace ui;
-  const FontEntry& large = assets::kFontLarge;
-  const FontEntry& small = assets::kFontSmall;
+  const FontEntry& large = theme::large();
+  const FontEntry& small = theme::small();
   const int n = (int)items_.size();
   const bool overflow = n > kListVisible;
   const int16_t right = overflow ? kScreenW - kScrollbarW : kScreenW;
@@ -97,7 +97,7 @@ void ListScreen::draw(App& app, Framebuffer& fb) {
     const bool on = i == sel_;
     if (on) fb.fillRect(0, y, right - 1, kListRowH, true);
     const bool ink = !on;
-    if (it.icon) drawPic(fb, kPad, y + (kListRowH - kListIcon) / 2, *it.icon, ink);
+    if (it.icon) drawPic(fb, kPad, y + (kListRowH - kListIcon) / 2, theme::icon(it.icon), ink);
 
     int16_t labelRight = right - 2;
     if (it.value) {
@@ -130,8 +130,8 @@ void DetailScreen::onEvent(App& app, const ButtonEvent& e) {
 
 void DetailScreen::draw(App& app, Framebuffer& fb) {
   using namespace ui;
-  const FontEntry& large = assets::kFontLarge;
-  const FontEntry& small = assets::kFontSmall;
+  const FontEntry& large = theme::large();
+  const FontEntry& small = theme::small();
   drawText(fb, large, kPad, kStatusH + 2, title_.c_str());
   fb.hline(0, kStatusH + kTitleH - 1, kScreenW, true);
 
@@ -173,8 +173,8 @@ void TextInputScreen::onEvent(App& app, const ButtonEvent& e) {
 void TextInputScreen::draw(App& app, Framebuffer& fb) {
   using namespace ui;
   (void)app;
-  const FontEntry& large = assets::kFontLarge;
-  const FontEntry& small = assets::kFontSmall;
+  const FontEntry& large = theme::large();
+  const FontEntry& small = theme::small();
   const int16_t y0 = kStatusH;
   drawText(fb, large, kPad, y0 + 2, title_.c_str());
   fb.hline(0, y0 + kTitleH - 1, kScreenW, true);
@@ -211,6 +211,19 @@ void TextInputScreen::draw(App& app, Framebuffer& fb) {
     const char s[2] = {c == ' ' ? '_' : c, 0};
     drawText(fb, large, x + 1, cy + 5, s, !on);
   }
+}
+
+// ---------------- Notice ----------------
+
+void NoticeScreen::onEvent(App& app, const ButtonEvent& e) {
+  if ((e.button == hal::Button::Cancel || e.button == hal::Button::Ok) && e.press == Press::Short) app.pop();
+}
+
+void NoticeScreen::draw(App&, Framebuffer& fb) {
+  using namespace ui;
+  drawText(fb, theme::large(), kPad, kStatusH + 2, title_.c_str());
+  fb.hline(0, kStatusH + kTitleH - 1, kScreenW, true);
+  drawWrapped(fb, theme::small(), kPad, kStatusH + kTitleH + 3, kScreenW - kPad * 2, kDetailRowH, text_.c_str());
 }
 
 // ---------------- menus ----------------
@@ -266,15 +279,52 @@ std::unique_ptr<Screen> makeDateTime() {
 
 std::unique_ptr<Screen> makeMainMenu() {
   std::vector<ListScreen::Item> items = {
-      {"IR", &assets::kIconIr, [](App& app) { app.push(makeIrMenu()); }, nullptr},
-      {"NFC", &assets::kIconNfc, [](App& app) { app.push(makeNfcMenu()); }, nullptr},
-      {"Games", &assets::kIconGames, [](App& app) { app.push(comingSoon("Games")); }, nullptr},
-      {"WiFi Setup", &assets::kIconWifiSetup, [](App& app) { app.push(makeWifiMenu()); }, nullptr},
-      {"Bluetooth Remote", &assets::kIconBluetoothRemote, [](App& app) { app.push(makeBluetoothRemote()); },
+      {"IR", "ir", [](App& app) { app.push(makeIrMenu()); }, nullptr},
+      {"NFC", "nfc", [](App& app) { app.push(makeNfcMenu()); }, nullptr},
+      {"Games", "games", [](App& app) { app.push(comingSoon("Games")); }, nullptr},
+      {"WiFi Setup", "wifi_setup", [](App& app) { app.push(makeWifiMenu()); }, nullptr},
+      {"Bluetooth Remote", "bluetooth_remote", [](App& app) { app.push(makeBluetoothRemote()); },
        nullptr},
-      {"Settings", &assets::kIconSettings, [](App& app) { app.push(makeSettingsMenu()); }, nullptr},
+      {"Settings", "settings", [](App& app) { app.push(makeSettingsMenu()); }, nullptr},
   };
   return std::make_unique<ListScreen>("Main", std::move(items));
+}
+
+std::unique_ptr<Screen> makeThemePicker() {
+  return std::make_unique<ListScreen>("Theme", [](App& app) {
+    const std::string active = theme::activeName();
+    std::vector<ListScreen::Item> items = {
+        {"Built-in", nullptr,
+         [](App& a) {
+           theme::useBuiltIn();
+           a.settings().theme.clear();
+           a.settings().save(a.hal().storage);
+           a.pop();
+         },
+         [active](App&) { return std::string(active.empty() ? "ON" : ""); }}};
+    for (const std::string& name : theme::available(app.hal().storage)) {
+      items.push_back({name, nullptr,
+                       [name](App& a) {
+                         std::string err;
+                         std::vector<std::string> warnings;
+                         if (!theme::load(a.hal().storage, name, err, warnings)) {
+                           a.push(std::make_unique<NoticeScreen>("Theme", "Couldn't load " + name + ": " + err + "."));
+                           return;
+                         }
+                         a.settings().theme = name;
+                         a.settings().save(a.hal().storage);
+                         if (warnings.empty()) {
+                           a.pop();
+                           return;
+                         }
+                         std::string text = "Loaded " + name + ". Kept the built-in version of: ";
+                         for (size_t i = 0; i < warnings.size(); i++) text += (i ? "; " : "") + warnings[i];
+                         a.replaceTop(std::make_unique<NoticeScreen>("Theme", text + "."));
+                       },
+                       [name, active](App&) { return std::string(name == active ? "ON" : ""); }});
+    }
+    return items;
+  });
 }
 
 std::unique_ptr<Screen> makeSettingsMenu() {
@@ -288,6 +338,8 @@ std::unique_ptr<Screen> makeSettingsMenu() {
        [](App& app) { return std::string(app.settings().invert ? "On" : "Off"); }},
       {"Date & time", nullptr, [](App& app) { app.push(makeDateTime()); }, nullptr},
       {"Firmware", nullptr, [](App& app) { app.push(makeFirmwareInfo()); }, nullptr},
+      {"Theme", nullptr, [](App& app) { app.push(makeThemePicker()); },
+       [](App&) { return theme::activeName().empty() ? std::string("Built-in") : theme::activeName(); }},
   };
   return std::make_unique<ListScreen>("Settings", std::move(items));
 }

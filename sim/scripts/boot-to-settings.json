@@ -57,7 +57,7 @@
       "t_ms": 2500,
       "type": "assert",
       "check": "framebuffer_hash_equals",
-      "value": "0030bc3b4ad17405"
+      "value": "2e55045db62ee172"
     },
     {
       "t_ms": 2600,

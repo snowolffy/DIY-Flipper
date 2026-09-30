@@ -13,17 +13,19 @@ with no display.
 firmware/            code that runs on the device
   hal/hal.h          hardware interfaces: display, input, storage, battery, RTC, clock, IR, NFC, WiFi, BLE
   ui/                1-bit framebuffer, drawing, the locked layout sizes (gfx.h)
-  app/               screen stack, List/Detail/Text-input templates, menus, IR/NFC/WiFi/BT apps, settings
+  app/               screen stack, List/Detail/Text-input templates, menus, IR/NFC/WiFi/BT apps, settings,
+                     SD-card theme loader (theme.cpp)
   assets/            fonts, icons and splash exported from Flipper UI Studio (generated/*.h) + registry
   platform/host/     stand-in <Arduino.h> for host builds only
 simulator/
-  core/              mock HAL, virtual-clock simulator, JSON script runner
+  core/              mock HAL, virtual-clock simulator, JSON script runner, asset importer
   headless/          sim_headless: runs scripts, prints pass/fail (used in the cloud and CI)
   gui/               sim_gui: the windowed simulator (Dear ImGui + SDL2)
 sim/                 this project's simulator data
   storage/flash/     mirrors LittleFS
   storage/sd/        mirrors the SD card: /ir /nfc /games /media /system
   seeds/             starting states scripts can copy over storage/
+  fixtures/          Studio-format exports for tests (made by tools/make_fixtures.py)
   scripts/           mock-scripts (*.json)
 tests/               unit tests for exact-value logic
 ```
@@ -83,6 +85,7 @@ The Mock control panel has one tab per mock:
 
 | Tab | Controls |
 |---|---|
+| Project | the open project folder, recent folders, Import asset |
 | Power & storage | battery charge or "no reading", RTC missing / sync to PC time, SD card in or out, failing writes |
 | IR | press a remote button (protocol, address, command); list of signals the device sent |
 | NFC | place a card (UID, type, block count, or a dump saved on the SD card) and take it away |
@@ -90,8 +93,9 @@ The Mock control panel has one tab per mock:
 | Bluetooth | a host connects or disconnects, bonded hosts, bond list full, keys the host received |
 | Scripts | play any script in `sim/scripts` inside the window, with live pass/fail |
 
-Options: `--script FILE.json` plays a script as soon as the window opens, `--tab NAME` opens a tab
-(`power`, `ir`, `nfc`, `wifi`, `bluetooth`, `scripts`). "Restart the device first" (on by default) power-cycles
+Options: `--project DIR` opens a project folder (default: the last one you had open, else `./sim`),
+`--script FILE.json` plays a script as soon as the window opens, `--import FILE` imports an export at start,
+`--tab NAME` opens a tab (`project`, `power`, `ir`, `nfc`, `wifi`, `bluetooth`, `scripts`). "Restart the device first" (on by default) power-cycles
 the device before a script, so it replays exactly as it does headless.
 
 ## Mock-scripts
@@ -111,12 +115,33 @@ The full list of event types and checks is at the top of `simulator/core/script.
 10 ms of virtual time, so a script gives the same frames on every machine. `fb_hash` in the output is what a
 `framebuffer_hash_equals` check compares against.
 
+## Projects and Import Asset
+
+A project folder holds `storage/`, `scripts/`, `seeds/` and `fixtures/`; this repository's `sim/` is one.
+In the window, open another one from the Project tab (path or recent list) or by dropping the folder onto the
+window. Missing `storage/` folders are created. Recent folders are remembered per user.
+
+Exports from Flipper UI Studio go onto the open project's SD card the way you'd copy them from a PC, so an
+ejected card or failing writes don't block them:
+
+| File | Lands in |
+|---|---|
+| theme pack `.zip` | `sd:/system/theme/<name>/` (every folder in the zip that holds a `theme.ini`) |
+| `.b1i` picture | `sd:/media/` |
+| `.b1f` font | `sd:/system/fonts/` |
+
+Drop the file on the window or use Project > Import asset. Each file is checked the way the firmware will
+check it; zip entries that try to leave the theme folder are skipped. On the device, pick the theme in
+Settings > Theme. Files that don't fit their slot (fonts must be 8×8 / 6×8, the splash 128×160, menu icons
+12×12, status icons 8×8, battery 10×8) keep the built-in version, and the device says which.
+
 ## Assets
 
 Pictures, icons, fonts and theme packs are drawn in
-[Flipper UI Studio](https://claude.ai/artifact/FAn19c48h4MqHxxMmpA4qK). Export a header there, save it into
-`firmware/assets/generated/`, include it in `firmware/assets/assets.cpp` and add its entry to the table the
-studio's install steps name. Theme packs go on the SD card under `/system/theme/<name>/`.
+[Flipper UI Studio](https://claude.ai/artifact/FAn19c48h4MqHxxMmpA4qK). To build an asset into the firmware,
+export a header there, save it into `firmware/assets/generated/`, include it in `firmware/assets/assets.cpp`
+and add its entry to the table the studio's install steps name. To try one without rebuilding, import the
+`.zip` / `.b1i` / `.b1f` into the simulator (above).
 
 Asset data and the framebuffer use the same bit order: `idx = y*w + x`, `byte = idx/8`, `bit = idx%8`,
 LSB-first, 1 = ink.
@@ -140,9 +165,11 @@ Done:
   (pair with passkey, media keys, bond list full)
 - mocks for display, input, storage, battery, RTC, IR, NFC, WiFi and BLE; headless runner; windowed
   simulator with a control tab per mock and live script playback
+- themes: Settings > Theme loads a pack from `sd:/system/theme/`, remembered across reboots; Import Asset
+  and project folders with a recent list in the window
 - CI on Linux, Windows and macOS with a portable Windows build
 
 Not simulated yet: NFC write/emulate, IR raw capture from the GUI, NTP time from WiFi.
 
-Next, in order: recent-folders list · Import Asset (`.b1i` / `.b1f` / theme `.zip` into `sim/storage`) ·
-ESP32 target.
+Next: the ESP32 target (real drivers behind the same HAL), and recording a live session as a script
+(deferred to v1.1 in the plan).
