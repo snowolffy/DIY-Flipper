@@ -68,5 +68,8 @@ int16_t drawText(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, cons
                  int16_t clipRight = kScreenW);
 int16_t drawTextRight(Framebuffer& fb, const FontEntry& f, int16_t right, int16_t y, const char* s, bool ink = true);
 int16_t textWidth(const FontEntry& f, const char* s);
+// Word-wraps s into lines of `width` pixels starting at (x, y), lineH apart. Returns the y below the last line.
+int16_t drawWrapped(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, int16_t width, int16_t lineH,
+                    const char* s, bool ink = true);
 
 }  // namespace ui

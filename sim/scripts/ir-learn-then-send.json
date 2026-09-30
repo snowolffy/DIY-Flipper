@@ -1,0 +1,24 @@
+{
+  "name": "ir-learn-then-send",
+  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
+  "events": [
+    { "t_ms": 50,   "type": "ir_signal", "protocol": "NEC", "address": "0x01", "command": "0x02" },
+    { "t_ms": 100,  "type": "button", "button": "OK" },
+    { "t_ms": 300,  "type": "button", "button": "OK" },
+    { "t_ms": 500,  "type": "assert", "check": "menu_path_equals", "value": "Main/IR/Learn" },
+    { "t_ms": 500,  "type": "assert", "check": "state_equals", "field": "ir_listening", "value": true },
+    { "t_ms": 600,  "type": "ir_signal", "protocol": "NEC", "address": "0x04", "command": "0x08" },
+    { "t_ms": 800,  "type": "assert", "check": "state_equals", "field": "ir_listening", "value": false },
+    { "t_ms": 900,  "type": "button", "button": "OK" },
+    { "t_ms": 1100, "type": "assert", "check": "storage_file_exists", "path": "sd:/ir/uncategorized/new_remote.json" },
+    { "t_ms": 1100, "type": "assert", "check": "storage_file_contains", "path": "sd:/ir/uncategorized/new_remote.json", "text": "\"command\": \"0x08\"" },
+    { "t_ms": 1100, "type": "assert", "check": "menu_path_equals", "value": "Main/IR/Saved" },
+    { "t_ms": 1200, "type": "button", "button": "CANCEL" },
+    { "t_ms": 1400, "type": "button", "button": "RIGHT" },
+    { "t_ms": 1600, "type": "button", "button": "OK" },
+    { "t_ms": 1800, "type": "assert", "check": "menu_path_equals", "value": "Main/IR/new_remote" },
+    { "t_ms": 1900, "type": "button", "button": "OK" },
+    { "t_ms": 2100, "type": "button", "button": "OK" },
+    { "t_ms": 2300, "type": "assert", "check": "state_equals", "field": "ir_sent_count", "value": 2 }
+  ]
+}

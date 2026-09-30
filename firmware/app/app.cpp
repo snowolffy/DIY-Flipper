@@ -50,6 +50,7 @@ void App::applyStackOps() {
       // the root screen is never popped; Replace on it swaps it
       if (op.kind == StackOp::Pop && stack_.size() <= 1) continue;
       if (!stack_.empty()) stack_.pop_back();
+      if (op.kind == StackOp::Pop) stack_.back()->onResume(*this);
     }
     if (op.kind == StackOp::Push || op.kind == StackOp::Replace) {
       stack_.push_back(std::move(op.screen));
@@ -99,21 +100,31 @@ void App::drawStatusBar(const Screen& top) {
     std::snprintf(left, sizeof(left), "%s", named->title());
   }
 
-  // right slot: battery; WiFi/BT icons join it to the left once those radios exist and are on
+  // right slot, right to left: battery, then WiFi and Bluetooth icons only while those radios are on
   const PicEntry& bat = assets::kIconBattery;
   const int16_t batX = kScreenW - kPad - bat.w;
+  int16_t iconX = batX;
+  if (hal_.wifi.state() != hal::WifiState::Off) {
+    iconX -= 2 + assets::kIconWifi.w;
+    drawPic(fb_, iconX, 2, assets::kIconWifi);
+  }
+  if (hal_.ble.state() != hal::BleState::Off) {
+    iconX -= 2 + assets::kIconBluetooth.w;
+    drawPic(fb_, iconX, 2, assets::kIconBluetooth);
+  }
   drawPic(fb_, batX, 2, bat);
   // the icon's inner fill is 4 columns (x 2-5, rows 3-4); show the charge in quarters
   fb_.fillRect(batX + 2, 2 + 3, 4, 2, false);
   const int pct = battery_.percent();
   if (pct < 0) {
-    drawText(fb_, assets::kFontSmall, batX - assets::kFontSmall.w - 1, 2, "?");
+    drawText(fb_, assets::kFontSmall, iconX - assets::kFontSmall.w - 1, 2, "?");
+    iconX -= assets::kFontSmall.w + 1;
   } else {
     const int cols = pct == 0 ? 0 : (pct + 24) / 25;
     fb_.fillRect(batX + 2, 2 + 3, (int16_t)cols, 2, true);
   }
 
-  drawText(fb_, assets::kFontSmall, kPad, 2, left, true, batX - 4);
+  drawText(fb_, assets::kFontSmall, kPad, 2, left, true, iconX - 4);
 }
 
 }  // namespace app

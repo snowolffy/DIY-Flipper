@@ -3,8 +3,10 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 #include "hal/hal.h"
 #include "ui/framebuffer.h"
@@ -57,6 +59,7 @@ class MockStorage : public hal::Storage {
   bool exists(hal::Volume v, const std::string& path) const override;
   bool read(hal::Volume v, const std::string& path, std::string& out) const override;
   bool write(hal::Volume v, const std::string& path, const std::string& data) override;
+  bool list(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const override;
 
   void setSdPresent(bool present) { sdPresent_ = present; }
   void setFailWrites(bool fail) { failWrites_ = fail; }
@@ -97,6 +100,112 @@ class MockRtc : public hal::Rtc {
   int64_t baseEpoch_ = 1790771100;  // 2026-09-30 12:25:00 UTC
   uint32_t baseMillis_ = 0;
   bool missing_ = false;
+};
+
+// ---------- radios ----------
+
+class MockIr : public hal::Ir {
+ public:
+  void setListening(bool on) override { listening_ = on; }
+  bool receive(hal::IrSignal& out) override;
+  bool send(const hal::IrSignal& s) override;
+
+  // A remote pressed in front of the receiver. Dropped unless the firmware is listening.
+  void inject(const hal::IrSignal& s);
+  bool listening() const { return listening_; }
+  int sentCount() const { return sentCount_; }
+  const std::deque<hal::IrSignal>& sent() const { return sent_; }  // newest last, at most 20
+
+ private:
+  bool listening_ = false;
+  std::deque<hal::IrSignal> inbox_;
+  std::deque<hal::IrSignal> sent_;
+  int sentCount_ = 0;
+};
+
+class MockNfc : public hal::Nfc {
+ public:
+  void setPolling(bool on) override { polling_ = on; }
+  bool card(hal::NfcCard& out) override;
+
+  void place(const hal::NfcCard& c) {
+    card_ = c;
+    present_ = true;
+  }
+  void remove() { present_ = false; }
+  bool present() const { return present_; }
+  bool polling() const { return polling_; }
+
+ private:
+  bool polling_ = false;
+  bool present_ = false;
+  hal::NfcCard card_;
+};
+
+// Scans and connects finish after latencyMs of virtual time, so "Scanning..." screens are testable.
+class MockWifi : public hal::Wifi {
+ public:
+  explicit MockWifi(const VirtualClock& clock) : clock_(clock) {}
+
+  hal::WifiState state() const override { return state_; }
+  void startScan() override;
+  std::vector<hal::WifiNetwork> scanResults() const override { return results_; }
+  void connect(const std::string& ssid, const std::string& password) override;
+  void disconnect() override;
+  std::string connectedSsid() const override { return state_ == hal::WifiState::Connected ? ssid_ : ""; }
+
+  void tick();  // finishes pending scans/connects; the simulator calls it every loop tick
+  void setNetworks(std::vector<hal::WifiNetwork> n) { networks_ = std::move(n); }
+  std::vector<hal::WifiNetwork>& networks() { return networks_; }
+  void setNextConnectSucceeds(bool ok) { nextOk_ = ok; }
+  bool nextConnectSucceeds() const { return nextOk_; }
+  void setLatencyMs(uint32_t ms) { latencyMs_ = ms; }
+  uint32_t latencyMs() const { return latencyMs_; }
+  const std::string& lastPassword() const { return password_; }
+
+ private:
+  const VirtualClock& clock_;
+  hal::WifiState state_ = hal::WifiState::Off;
+  std::vector<hal::WifiNetwork> networks_ = {
+      {"HomeNet_5G", -48, true}, {"HomeNet", -55, true}, {"CoffeeShop Free", -71, false}, {"Neighbor-2G", -83, true}};
+  std::vector<hal::WifiNetwork> results_;
+  std::string ssid_, password_;
+  bool nextOk_ = true;
+  uint32_t latencyMs_ = 800;
+  uint32_t doneAt_ = 0;
+};
+
+class MockBle : public hal::Ble {
+ public:
+  static constexpr size_t kMaxBonds = 4;
+
+  hal::BleState state() const override { return state_; }
+  void startAdvertising(const std::string& deviceName) override;
+  void stop() override { state_ = hal::BleState::Off; }
+  std::string hostName() const override { return host_; }
+  uint32_t passkey() const override { return passkey_; }
+  void confirmPairing(bool accept) override;
+  bool sendKey(uint16_t usage) override;
+
+  // A phone or PC tries to connect. Bonded hosts connect straight away; new ones ask to pair, unless
+  // the bond list is full.
+  void hostConnect(const std::string& name);
+  void hostDisconnect();
+  // Fills the bond list with placeholder devices (or clears them) so the next new host is refused.
+  void setBondListFull(bool full);
+  std::vector<std::string>& bonded() { return bonded_; }
+  const std::string& advertisedName() const { return advName_; }
+  int keysSent() const { return keysSent_; }
+  const std::deque<uint16_t>& keys() const { return keys_; }  // newest last, at most 20
+
+ private:
+  hal::BleState state_ = hal::BleState::Off;
+  std::string advName_, host_;
+  uint32_t passkey_ = 0;
+  uint32_t pairings_ = 0;
+  std::vector<std::string> bonded_ = {"Pixel 8"};
+  std::deque<uint16_t> keys_;
+  int keysSent_ = 0;
 };
 
 }  // namespace sim

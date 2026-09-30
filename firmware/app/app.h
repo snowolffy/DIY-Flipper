@@ -26,6 +26,8 @@ class Screen {
   // Screens with their own title row (Detail) leave the status bar to name the section they sit in.
   virtual bool hasTitleRow() const { return false; }
   virtual void onEnter(App&) {}
+  // Called when the screen is on top again after the one above it closed.
+  virtual void onResume(App&) {}
   virtual void onEvent(App&, const ButtonEvent&) {}
   virtual void onTick(App&) {}
   virtual void draw(App&, ui::Framebuffer&) = 0;

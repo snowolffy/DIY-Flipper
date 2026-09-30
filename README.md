@@ -11,9 +11,9 @@ with no display.
 
 ```
 firmware/            code that runs on the device
-  hal/hal.h          hardware interfaces: display, input, storage, battery, RTC, clock
+  hal/hal.h          hardware interfaces: display, input, storage, battery, RTC, clock, IR, NFC, WiFi, BLE
   ui/                1-bit framebuffer, drawing, the locked layout sizes (gfx.h)
-  app/               screen stack, List/Detail templates, menus, buttons, battery, settings
+  app/               screen stack, List/Detail/Text-input templates, menus, IR/NFC/WiFi/BT apps, settings
   assets/            fonts, icons and splash exported from Flipper UI Studio (generated/*.h) + registry
   platform/host/     stand-in <Arduino.h> for host builds only
 simulator/
@@ -76,9 +76,23 @@ build-gui/sim_gui            # or build-gui/Release/sim_gui.exe with Visual Stud
 | P | POWER |
 | F12 | save the screen as a BMP in `sim/screenshots/` |
 
-The on-screen buttons work too; holding one acts like holding the key. The Mock control panel sets battery
-charge or "no reading", removes the RTC or syncs it to the PC clock, ejects the SD card, and makes every
-write fail. Unlike scripts, the window uses `sim/storage` directly, so settings you change stay on disk.
+The on-screen buttons work too; holding one acts like holding the key. Unlike scripts, the window uses
+`sim/storage` directly, so what the firmware saves stays on disk.
+
+The Mock control panel has one tab per mock:
+
+| Tab | Controls |
+|---|---|
+| Power & storage | battery charge or "no reading", RTC missing / sync to PC time, SD card in or out, failing writes |
+| IR | press a remote button (protocol, address, command); list of signals the device sent |
+| NFC | place a card (UID, type, block count, or a dump saved on the SD card) and take it away |
+| WiFi | networks in range (name, signal, lock), whether the next connect succeeds, scan/connect latency |
+| Bluetooth | a host connects or disconnects, bonded hosts, bond list full, keys the host received |
+| Scripts | play any script in `sim/scripts` inside the window, with live pass/fail |
+
+Options: `--script FILE.json` plays a script as soon as the window opens, `--tab NAME` opens a tab
+(`power`, `ir`, `nfc`, `wifi`, `bluetooth`, `scripts`). "Restart the device first" (on by default) power-cycles
+the device before a script, so it replays exactly as it does headless.
 
 ## Mock-scripts
 
@@ -119,9 +133,16 @@ LSB-first, 1 = ink.
 
 ## Status
 
-Done: firmware core with main menu, Settings (invert, date & time, firmware info), boot splash; mocks for
-display, input, storage, battery and RTC; headless runner; windowed simulator with live mock controls;
-CI on Linux, Windows and macOS with a portable Windows build.
+Done:
+- firmware core: main menu, Settings (invert, date & time, firmware info), boot splash
+- apps: IR (learn, save to `sd:/ir/uncategorized/`, send), NFC (read, save to `sd:/nfc/`, view dumps),
+  WiFi Setup (scan, password on the character carousel, connect, disconnect), Bluetooth Remote
+  (pair with passkey, media keys, bond list full)
+- mocks for display, input, storage, battery, RTC, IR, NFC, WiFi and BLE; headless runner; windowed
+  simulator with a control tab per mock and live script playback
+- CI on Linux, Windows and macOS with a portable Windows build
 
-Next, in order: IR, NFC, WiFi and BLE mocks with live controls (and loading a script into the live
-window) · recent-folders list · Import Asset (`.b1i` / `.b1f` / theme `.zip` into `sim/storage`) · ESP32 target.
+Not simulated yet: NFC write/emulate, IR raw capture from the GUI, NTP time from WiFi.
+
+Next, in order: recent-folders list · Import Asset (`.b1i` / `.b1f` / theme `.zip` into `sim/storage`) ·
+ESP32 target.

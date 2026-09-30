@@ -7,6 +7,7 @@
 
 #include "app/battery.h"
 #include "app/buttons.h"
+#include "app/minijson.h"
 #include "app/settings.h"
 #include "core/mocks.h"
 
@@ -118,7 +119,36 @@ static void settingsFile() {
   fs::remove_all(dir);
 }
 
+static void miniJson() {
+  const std::string j = "{\n  \"name\": \"tv \\\"lounge\\\"\",\n  \"address\": \"0x04\",\n  \"n\": 12,\n"
+                        "  \"blocks\": [\"AA\", \"BB\"]\n}";
+  CHECK(minijson::field(j, "name") == "tv \"lounge\"");
+  CHECK(minijson::field(j, "address") == "0x04");
+  CHECK(minijson::field(j, "n") == "12");
+  CHECK(minijson::field(j, "missing").empty());
+  const auto b = minijson::stringArray(j, "blocks");
+  CHECK(b.size() == 2 && b[0] == "AA" && b[1] == "BB");
+  CHECK(minijson::escape("a\"b") == "a\\\"b");
+}
+
+static void storageList() {
+  namespace fs = std::filesystem;
+  const fs::path dir = fs::temp_directory_path() / "diyf-unit-list";
+  fs::remove_all(dir);
+  sim::MockStorage st(dir);
+  std::vector<std::string> names;
+  CHECK(!st.list(hal::Volume::Sd, "/ir", names));
+  CHECK(st.write(hal::Volume::Sd, "/ir/b.json", "{}"));
+  CHECK(st.write(hal::Volume::Sd, "/ir/a.json", "{}"));
+  CHECK(st.list(hal::Volume::Sd, "/ir", names) && names.size() == 2 && names[0] == "a.json");
+  st.setSdPresent(false);
+  CHECK(!st.list(hal::Volume::Sd, "/ir", names));
+  fs::remove_all(dir);
+}
+
 int main() {
+  miniJson();
+  storageList();
   batteryTable();
   batteryAveraging();
   buttons();

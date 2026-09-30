@@ -1,5 +1,6 @@
 #include "core/mocks.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -108,6 +109,20 @@ bool MockStorage::write(hal::Volume v, const std::string& path, const std::strin
   return (bool)f;
 }
 
+bool MockStorage::list(hal::Volume v, const std::string& dir, std::vector<std::string>& names) const {
+  names.clear();
+  if (!present(v)) return false;
+  const fs::path p = hostPath(v, dir);
+  std::error_code ec;
+  if (p.empty() || !fs::is_directory(p, ec)) return false;
+  for (const auto& e : fs::directory_iterator(p, ec)) {
+    const std::string name = e.path().filename().string();
+    if (e.is_regular_file(ec) && name != ".gitkeep") names.push_back(name);
+  }
+  std::sort(names.begin(), names.end());
+  return true;
+}
+
 // ---------------- battery ----------------
 
 void MockBattery::setPercent(int percent) { mv_ = app::batteryMvFromPercent(percent); }
@@ -175,6 +190,125 @@ bool MockRtc::parse(const std::string& iso, hal::DateTime& out) {
   out.minute = (uint8_t)mi;
   out.second = (uint8_t)s;
   return true;
+}
+
+// ---------------- IR ----------------
+
+void MockIr::inject(const hal::IrSignal& s) {
+  if (listening_) inbox_.push_back(s);
+}
+
+bool MockIr::receive(hal::IrSignal& out) {
+  if (!listening_ || inbox_.empty()) return false;
+  out = inbox_.front();
+  inbox_.pop_front();
+  return true;
+}
+
+bool MockIr::send(const hal::IrSignal& s) {
+  sent_.push_back(s);
+  if (sent_.size() > 20) sent_.pop_front();
+  sentCount_++;
+  return true;
+}
+
+// ---------------- NFC ----------------
+
+bool MockNfc::card(hal::NfcCard& out) {
+  if (!polling_ || !present_) return false;
+  out = card_;
+  return true;
+}
+
+// ---------------- WiFi ----------------
+
+void MockWifi::startScan() {
+  state_ = hal::WifiState::Scanning;
+  doneAt_ = clock_.millis() + latencyMs_;
+}
+
+void MockWifi::connect(const std::string& ssid, const std::string& password) {
+  state_ = hal::WifiState::Connecting;
+  ssid_ = ssid;
+  password_ = password;
+  doneAt_ = clock_.millis() + latencyMs_;
+}
+
+void MockWifi::disconnect() {
+  state_ = hal::WifiState::Off;
+  ssid_.clear();
+}
+
+void MockWifi::tick() {
+  if (state_ != hal::WifiState::Scanning && state_ != hal::WifiState::Connecting) return;
+  if ((int32_t)(clock_.millis() - doneAt_) < 0) return;
+  if (state_ == hal::WifiState::Scanning) {
+    results_ = networks_;
+    std::sort(results_.begin(), results_.end(),
+              [](const hal::WifiNetwork& a, const hal::WifiNetwork& b) { return a.rssi > b.rssi; });
+    state_ = hal::WifiState::Idle;
+  } else {
+    const bool known = std::any_of(networks_.begin(), networks_.end(),
+                                   [&](const hal::WifiNetwork& n) { return n.ssid == ssid_; });
+    state_ = known && nextOk_ ? hal::WifiState::Connected : hal::WifiState::Failed;
+  }
+}
+
+// ---------------- BLE ----------------
+
+void MockBle::startAdvertising(const std::string& deviceName) {
+  advName_ = deviceName;
+  host_.clear();
+  state_ = hal::BleState::Advertising;
+}
+
+void MockBle::hostConnect(const std::string& name) {
+  if (state_ != hal::BleState::Advertising) return;  // nothing to connect to
+  host_ = name;
+  if (std::find(bonded_.begin(), bonded_.end(), name) != bonded_.end()) {
+    state_ = hal::BleState::Connected;
+  } else if (bonded_.size() >= kMaxBonds) {
+    state_ = hal::BleState::BondListFull;
+  } else {
+    // deterministic six-digit code so screenshots and hashes repeat
+    passkey_ = (123456u + 271828u * pairings_++) % 1000000u;
+    state_ = hal::BleState::PairingRequest;
+  }
+}
+
+void MockBle::hostDisconnect() {
+  if (state_ == hal::BleState::Off) return;
+  host_.clear();
+  state_ = hal::BleState::Advertising;
+}
+
+void MockBle::confirmPairing(bool accept) {
+  if (state_ != hal::BleState::PairingRequest) return;
+  if (accept) {
+    bonded_.push_back(host_);
+    state_ = hal::BleState::Connected;
+  } else {
+    host_.clear();
+    state_ = hal::BleState::Advertising;
+  }
+}
+
+bool MockBle::sendKey(uint16_t usage) {
+  if (state_ != hal::BleState::Connected) return false;
+  keys_.push_back(usage);
+  if (keys_.size() > 20) keys_.pop_front();
+  keysSent_++;
+  return true;
+}
+
+void MockBle::setBondListFull(bool full) {
+  if (full) {
+    for (int i = 1; bonded_.size() < kMaxBonds; i++) bonded_.push_back("Old device " + std::to_string(i));
+  } else {
+    bonded_.erase(std::remove_if(bonded_.begin(), bonded_.end(),
+                                 [](const std::string& n) { return n.rfind("Old device ", 0) == 0; }),
+                  bonded_.end());
+  }
 }
 
 }  // namespace sim

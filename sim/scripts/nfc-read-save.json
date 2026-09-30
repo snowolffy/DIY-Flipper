@@ -1,0 +1,23 @@
+{
+  "name": "nfc-read-save",
+  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false, "sd_present": false },
+  "events": [
+    { "t_ms": 100,  "type": "button", "button": "RIGHT" },
+    { "t_ms": 300,  "type": "button", "button": "OK" },
+    { "t_ms": 500,  "type": "button", "button": "OK" },
+    { "t_ms": 700,  "type": "assert", "check": "state_equals", "field": "nfc_polling", "value": true },
+    { "t_ms": 800,  "type": "nfc_card", "action": "present", "uid": "04A2245A6B1C80", "card_type": "NTAG215",
+      "blocks": ["04A22453", "5A6B1C80", "7F480000", "E1106D00"] },
+    { "t_ms": 1000, "type": "button", "button": "OK" },
+    { "t_ms": 1200, "type": "assert", "check": "storage_file_missing", "path": "sd:/nfc/04A2245A6B1C80.json" },
+    { "t_ms": 1200, "type": "assert", "check": "menu_path_equals", "value": "Main/NFC/Read card" },
+    { "t_ms": 1300, "type": "sd", "present": true },
+    { "t_ms": 1400, "type": "button", "button": "OK" },
+    { "t_ms": 1600, "type": "assert", "check": "storage_file_contains", "path": "sd:/nfc/04A2245A6B1C80.json", "text": "NTAG215" },
+    { "t_ms": 1600, "type": "nfc_card", "action": "remove" },
+    { "t_ms": 1700, "type": "button", "button": "CANCEL" },
+    { "t_ms": 1900, "type": "button", "button": "RIGHT" },
+    { "t_ms": 2100, "type": "button", "button": "OK" },
+    { "t_ms": 2300, "type": "assert", "check": "menu_path_equals", "value": "Main/NFC/Dump" }
+  ]
+}

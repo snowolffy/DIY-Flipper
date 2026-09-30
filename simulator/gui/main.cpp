@@ -2,7 +2,10 @@
 // on-screen buttons for input, and live controls for the mocks. Storage is the project's own
 // sim/storage folder, so what the firmware writes stays on disk between runs.
 //
-//   sim_gui [--project DIR] [--scale N] [--screenshot FILE.bmp --frames N]
+//   sim_gui [--project DIR] [--scale N] [--script FILE.json] [--tab NAME] [--screenshot FILE.bmp --frames N]
+//
+//   --script   play a mock-script as soon as the window opens (same as Scripts > Run here)
+//   --tab      open the Mock control panel on this tab: power, ir, nfc, wifi, bluetooth, scripts
 //
 // Keys: Left/Up = LEFT, Right/Down = RIGHT, Enter/Z = OK, Backspace/Esc/X = CANCEL, P = POWER,
 //       F12 = save the device screen as a BMP in <project>/screenshots.
@@ -16,6 +19,7 @@
 #include <string>
 
 #include "core/simulator.h"
+#include "gui/panels.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
@@ -29,6 +33,8 @@ struct Options {
   int scale = 3;
   fs::path screenshot;  // write the whole window to this BMP after `frames` frames, then quit
   int frames = 0;
+  fs::path script;
+  std::string tab;
 };
 
 // Paper and ink of the panel as the studio draws them, so screens look the same in both tools.
@@ -44,6 +50,8 @@ bool parseArgs(int argc, char** argv, Options& o) {
     else if (a == "--scale" && i + 1 < argc) o.scale = std::max(1, std::min(8, std::atoi(argv[++i])));
     else if (a == "--screenshot" && i + 1 < argc) o.screenshot = argv[++i];
     else if (a == "--frames" && i + 1 < argc) o.frames = std::atoi(argv[++i]);
+    else if (a == "--script" && i + 1 < argc) o.script = argv[++i];
+    else if (a == "--tab" && i + 1 < argc) o.tab = argv[++i];
     else return false;
   }
   return true;
@@ -118,7 +126,9 @@ bool holdButton(const char* label, const ImVec2& size) {
 int main(int argc, char** argv) {
   Options opt;
   if (!parseArgs(argc, argv, opt)) {
-    std::fprintf(stderr, "usage: sim_gui [--project DIR] [--scale N] [--screenshot FILE.bmp --frames N]\n");
+    std::fprintf(stderr,
+                 "usage: sim_gui [--project DIR] [--scale N] [--script FILE.json] [--tab NAME] "
+                 "[--screenshot FILE.bmp --frames N]\n");
     return 2;
   }
   ensureProjectFolders(opt.project);
@@ -159,7 +169,12 @@ int main(int argc, char** argv) {
   sim::Simulator s(opt.project / "storage");
   s.rtc().set(pcLocalTime());
   s.battery().setPercent(80);
-  s.boot(true);
+  sim::Script startScript;
+  std::string startError;
+  const bool haveStartScript = !opt.script.empty() && sim::loadScript(opt.script, startScript, startError) &&
+                               sim::copySeed(opt.project, startScript.init.storageSeed, opt.project / "storage", startError);
+  if (haveStartScript) sim::applyInitialState(startScript.init, s);
+  s.boot(haveStartScript ? startScript.init.coldBoot : true);
 
   int batteryPct = 80;
   bool batteryUnknown = false;
@@ -167,9 +182,21 @@ int main(int argc, char** argv) {
   bool sdPresent = true;
   bool failWrites = false;
   std::string lastShot;
+  gui::RadioPanelState radios;
+  gui::ScriptPanelState scripts;
+  bool uiDown[hal::kButtonCount] = {};  // last button state written by keyboard/mouse
+  int frame = 0;
+  if (!opt.script.empty()) {
+    if (haveStartScript) scripts.player.start(std::move(startScript), s.now());
+    else scripts.message = startError;
+    if (opt.tab.empty()) opt.tab = "scripts";
+  }
+  auto tabFlags = [&](const char* id) {
+    // select the requested tab on the first frame only, then leave it to the user
+    return frame == 0 && opt.tab == id ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+  };
 
   const uint64_t start = SDL_GetTicks64();
-  int frame = 0;
   bool running = true;
   while (running) {
     SDL_Event ev;
@@ -222,6 +249,11 @@ int main(int argc, char** argv) {
     ImGui::SetNextWindowSize(ImVec2((float)w - devW, (float)h));
     ImGui::Begin("Mock control", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
+    ImGui::Text("Menu: %s", s.app().menuPath().c_str());
+    ImGui::SameLine();
+    ImGui::TextDisabled("  uptime %.1f s", s.now() / 1000.0);
+    const bool tabs = ImGui::BeginTabBar("mocks");
+    if (tabs && ImGui::BeginTabItem("Power & storage", nullptr, tabFlags("power"))) {
     if (ImGui::CollapsingHeader("Battery", ImGuiTreeNodeFlags_DefaultOpen)) {
       ImGui::BeginDisabled(batteryUnknown);
       if (ImGui::SliderInt("Charge %", &batteryPct, 0, 100)) s.battery().setPercent(batteryPct);
@@ -255,13 +287,34 @@ int main(int argc, char** argv) {
     }
 
     if (ImGui::CollapsingHeader("Firmware state", ImGuiTreeNodeFlags_DefaultOpen)) {
-      ImGui::Text("Menu:    %s", s.app().menuPath().c_str());
       ImGui::Text("Invert:  %s", s.app().settings().invert ? "on" : "off");
-      ImGui::Text("Uptime:  %.1f s", s.now() / 1000.0);
       ImGui::Text("fb_hash: %s", s.display().hash().c_str());
       if (ImGui::Button("Save screen (F12)")) saveShot = true;
       if (!lastShot.empty()) ImGui::TextWrapped("Saved %s", lastShot.c_str());
     }
+      ImGui::EndTabItem();
+    }
+    if (tabs && ImGui::BeginTabItem("IR", nullptr, tabFlags("ir"))) {
+      gui::drawIrPanel(s, radios);
+      ImGui::EndTabItem();
+    }
+    if (tabs && ImGui::BeginTabItem("NFC", nullptr, tabFlags("nfc"))) {
+      gui::drawNfcPanel(s, radios);
+      ImGui::EndTabItem();
+    }
+    if (tabs && ImGui::BeginTabItem("WiFi", nullptr, tabFlags("wifi"))) {
+      gui::drawWifiPanel(s);
+      ImGui::EndTabItem();
+    }
+    if (tabs && ImGui::BeginTabItem("Bluetooth", nullptr, tabFlags("bluetooth"))) {
+      gui::drawBlePanel(s, radios);
+      ImGui::EndTabItem();
+    }
+    if (tabs && ImGui::BeginTabItem("Scripts", nullptr, tabFlags("scripts"))) {
+      gui::drawScriptPanel(s, scripts, opt.project);
+      ImGui::EndTabItem();
+    }
+    if (tabs) ImGui::EndTabBar();
     ImGui::End();
 
     if (saveShot) {
@@ -275,15 +328,23 @@ int main(int argc, char** argv) {
     auto key = [&](SDL_Scancode a, SDL_Scancode b = SDL_SCANCODE_UNKNOWN, SDL_Scancode c = SDL_SCANCODE_UNKNOWN) {
       return kb && (keys[a] || (b != SDL_SCANCODE_UNKNOWN && keys[b]) || (c != SDL_SCANCODE_UNKNOWN && keys[c]));
     };
-    s.input().set(hal::Button::Left, mouseDown[(int)hal::Button::Left] || key(SDL_SCANCODE_LEFT, SDL_SCANCODE_UP));
-    s.input().set(hal::Button::Right, mouseDown[(int)hal::Button::Right] || key(SDL_SCANCODE_RIGHT, SDL_SCANCODE_DOWN));
-    s.input().set(hal::Button::Ok, mouseDown[(int)hal::Button::Ok] || key(SDL_SCANCODE_RETURN, SDL_SCANCODE_Z, SDL_SCANCODE_KP_ENTER));
-    s.input().set(hal::Button::Cancel,
-                  mouseDown[(int)hal::Button::Cancel] || key(SDL_SCANCODE_ESCAPE, SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_X));
-    s.input().set(hal::Button::Power, mouseDown[(int)hal::Button::Power] || key(SDL_SCANCODE_P));
+    bool want[hal::kButtonCount];
+    want[(int)hal::Button::Left] = mouseDown[(int)hal::Button::Left] || key(SDL_SCANCODE_LEFT, SDL_SCANCODE_UP);
+    want[(int)hal::Button::Right] = mouseDown[(int)hal::Button::Right] || key(SDL_SCANCODE_RIGHT, SDL_SCANCODE_DOWN);
+    want[(int)hal::Button::Ok] =
+        mouseDown[(int)hal::Button::Ok] || key(SDL_SCANCODE_RETURN, SDL_SCANCODE_Z, SDL_SCANCODE_KP_ENTER);
+    want[(int)hal::Button::Cancel] =
+        mouseDown[(int)hal::Button::Cancel] || key(SDL_SCANCODE_ESCAPE, SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_X);
+    want[(int)hal::Button::Power] = mouseDown[(int)hal::Button::Power] || key(SDL_SCANCODE_P);
+    // only on change, so a running script's button presses aren't overwritten every frame
+    for (int b = 0; b < hal::kButtonCount; b++) {
+      if (want[b] != uiDown[b]) s.input().set((hal::Button)b, want[b]);
+      uiDown[b] = want[b];
+    }
 
     // ---- run the firmware up to real time (screenshot mode steps a fixed 1/60 s so output is repeatable) ----
     const uint64_t elapsed = opt.screenshot.empty() ? SDL_GetTicks64() - start : (uint64_t)frame * 1000 / 60;
+    scripts.player.runUntil(s, (uint32_t)elapsed);
     s.advanceTo((uint32_t)elapsed);
 
     ImGui::Render();

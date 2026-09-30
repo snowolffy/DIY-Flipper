@@ -1,6 +1,7 @@
 #include "ui/gfx.h"
 
 #include <cstring>
+#include <string>
 
 #include "platform/progmem.h"
 
@@ -37,5 +38,27 @@ int16_t drawTextRight(Framebuffer& fb, const FontEntry& f, int16_t right, int16_
 }
 
 int16_t textWidth(const FontEntry& f, const char* s) { return (int16_t)(std::strlen(s) * f.w); }
+
+int16_t drawWrapped(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, int16_t width, int16_t lineH,
+                    const char* s, bool ink) {
+  const size_t perLine = width / f.w > 0 ? (size_t)(width / f.w) : 1;
+  std::string text(s);
+  size_t pos = 0;
+  while (pos < text.size()) {
+    while (pos < text.size() && text[pos] == ' ') pos++;
+    if (pos >= text.size()) break;
+    size_t end = pos + perLine;
+    if (end >= text.size()) {
+      end = text.size();
+    } else {
+      const size_t space = text.rfind(' ', end);
+      if (space != std::string::npos && space > pos) end = space;  // break at the last space that fits
+    }
+    drawText(fb, f, x, y, text.substr(pos, end - pos).c_str(), ink);
+    y += lineH;
+    pos = end;
+  }
+  return y;
+}
 
 }  // namespace ui

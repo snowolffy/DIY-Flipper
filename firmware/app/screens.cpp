@@ -1,6 +1,7 @@
 #include "app/screens.h"
 
 #include <cstdio>
+#include <cstring>
 
 #include "assets/assets.h"
 
@@ -38,7 +39,19 @@ void SplashScreen::draw(App&, Framebuffer& fb) { ui::drawPic(fb, 0, 0, assets::k
 
 // ---------------- List ----------------
 
-void ListScreen::onEnter(App& app) { selectedAt_ = app.now(); }
+void ListScreen::onEnter(App& app) {
+  selectedAt_ = app.now();
+  reload(app);
+}
+
+void ListScreen::onResume(App& app) { reload(app); }
+
+void ListScreen::reload(App& app) {
+  if (!source_) return;
+  items_ = source_(app);
+  if (sel_ >= (int)items_.size()) sel_ = items_.empty() ? 0 : (int)items_.size() - 1;
+  if (first_ > sel_) first_ = sel_;
+}
 
 void ListScreen::select(App& app, int index) {
   const int n = (int)items_.size();
@@ -136,6 +149,70 @@ void DetailScreen::draw(App& app, Framebuffer& fb) {
   }
 }
 
+// ---------------- Text input ----------------
+
+const char* const TextInputScreen::kCharset =
+    "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*-_.,:;?/+=()' ";
+
+void TextInputScreen::onEvent(App& app, const ButtonEvent& e) {
+  const int n = (int)std::strlen(kCharset);
+  if (e.button == hal::Button::Left && isStep(e)) pick_ = (pick_ - 1 + n) % n;
+  else if (e.button == hal::Button::Right && isStep(e)) pick_ = (pick_ + 1) % n;
+  else if (e.button == hal::Button::Ok && e.press == Press::Short) {
+    if (text_.size() < kMaxLen) text_ += kCharset[pick_];
+  } else if (e.button == hal::Button::Ok && e.press == Press::Long) {
+    if (onDone_) onDone_(app, text_);
+  } else if (e.button == hal::Button::Cancel && e.press == Press::Short) {
+    if (text_.empty()) app.pop();
+    else text_.pop_back();
+  } else if (e.button == hal::Button::Cancel && e.press == Press::Long) {
+    app.pop();
+  }
+}
+
+void TextInputScreen::draw(App& app, Framebuffer& fb) {
+  using namespace ui;
+  (void)app;
+  const FontEntry& large = assets::kFontLarge;
+  const FontEntry& small = assets::kFontSmall;
+  const int16_t y0 = kStatusH;
+  drawText(fb, large, kPad, y0 + 2, title_.c_str());
+  fb.hline(0, y0 + kTitleH - 1, kScreenW, true);
+  drawText(fb, small, kPad, y0 + kTitleH + 2, prompt_.c_str());
+
+  const int16_t fy = y0 + kTitleH + 10;
+  fb.frameRect(kPad, fy, kScreenW - kPad * 2, kInputBoxH, true);
+  // show the tail when the text is wider than the field
+  const size_t fits = (size_t)((kScreenW - kPad * 2 - 8) / large.w);
+  const std::string shown = text_.size() > fits ? text_.substr(text_.size() - fits) : text_;
+  const int16_t end = drawText(fb, large, kPad + 3, fy + 4, shown.c_str());
+  fb.fillRect(end + 1, fy + 3, 1, 10, true);
+
+  char count[12];
+  std::snprintf(count, sizeof(count), "%u/%u", (unsigned)text_.size(), (unsigned)kMaxLen);
+  drawTextRight(fb, small, kScreenW - kPad, fy + kInputBoxH + 2, count);
+  int16_t hy = fy + kInputBoxH + 14;
+  drawText(fb, small, kPad, hy, "< > PICK   OK ADD");
+  drawText(fb, small, kPad, hy + 10, "HOLD OK  DONE");
+  drawText(fb, small, kPad, hy + 20, "BACK  DELETE");
+
+  // carousel: the picked character in the middle, inverted
+  const int16_t cy = kScreenH - kCarouselH - kPad;
+  fb.hline(0, cy - 1, kScreenW, true);
+  const int n = (int)std::strlen(kCharset);
+  const int16_t cw = 10;
+  const int16_t mid = kScreenW / 2 - cw / 2;
+  for (int k = -6; k <= 6; k++) {
+    const int16_t x = mid + k * cw;
+    if (x + cw <= 0 || x >= kScreenW) continue;
+    const char c = kCharset[((pick_ + k) % n + n) % n];
+    const bool on = k == 0;
+    if (on) fb.fillRect(x, cy + 2, cw, kCarouselH - 4, true);
+    const char s[2] = {c == ' ' ? '_' : c, 0};
+    drawText(fb, large, x + 1, cy + 5, s, !on);
+  }
+}
+
 // ---------------- menus ----------------
 
 namespace {
@@ -189,12 +266,12 @@ std::unique_ptr<Screen> makeDateTime() {
 
 std::unique_ptr<Screen> makeMainMenu() {
   std::vector<ListScreen::Item> items = {
-      {"IR", &assets::kIconIr, [](App& app) { app.push(comingSoon("IR")); }, nullptr},
-      {"NFC", &assets::kIconNfc, [](App& app) { app.push(comingSoon("NFC")); }, nullptr},
+      {"IR", &assets::kIconIr, [](App& app) { app.push(makeIrMenu()); }, nullptr},
+      {"NFC", &assets::kIconNfc, [](App& app) { app.push(makeNfcMenu()); }, nullptr},
       {"Games", &assets::kIconGames, [](App& app) { app.push(comingSoon("Games")); }, nullptr},
-      {"WiFi Setup", &assets::kIconWifiSetup, [](App& app) { app.push(comingSoon("WiFi Setup")); }, nullptr},
-      {"Bluetooth Remote", &assets::kIconBluetoothRemote,
-       [](App& app) { app.push(comingSoon("Bluetooth Remote")); }, nullptr},
+      {"WiFi Setup", &assets::kIconWifiSetup, [](App& app) { app.push(makeWifiMenu()); }, nullptr},
+      {"Bluetooth Remote", &assets::kIconBluetoothRemote, [](App& app) { app.push(makeBluetoothRemote()); },
+       nullptr},
       {"Settings", &assets::kIconSettings, [](App& app) { app.push(makeSettingsMenu()); }, nullptr},
   };
   return std::make_unique<ListScreen>("Main", std::move(items));

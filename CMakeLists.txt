@@ -24,6 +24,8 @@ add_library(firmware_core STATIC
   firmware/app/app.cpp
   firmware/app/battery.cpp
   firmware/app/buttons.cpp
+  firmware/app/minijson.cpp
+  firmware/app/radio_apps.cpp
   firmware/app/screens.cpp
   firmware/app/settings.cpp
   firmware/assets/assets.cpp
@@ -83,11 +85,12 @@ if(DIYF_BUILD_GUI)
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
+    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
   )
   target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
   target_link_libraries(imgui PUBLIC SDL2::SDL2-static)
 
-  add_executable(sim_gui WIN32 simulator/gui/main.cpp)
+  add_executable(sim_gui WIN32 simulator/gui/main.cpp simulator/gui/panels.cpp)
   target_link_libraries(sim_gui PRIVATE sim_core imgui diyf_warnings)
   if(TARGET SDL2::SDL2main)
     target_link_libraries(sim_gui PRIVATE SDL2::SDL2main)
