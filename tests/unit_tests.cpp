@@ -109,6 +109,12 @@ static void settingsFile() {
   CHECK(loaded.invert);
   st.setFailWrites(true);
   CHECK(!s.save(st));
+  st.setFailWrites(false);
+  // a file saved by a Windows editor
+  CHECK(st.write(hal::Volume::Flash, app::Settings::kPath, "invert = 1\r\n"));
+  app::Settings crlf;
+  crlf.load(st);
+  CHECK(crlf.invert);
   fs::remove_all(dir);
 }
 

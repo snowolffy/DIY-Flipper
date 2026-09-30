@@ -4,6 +4,18 @@
 
 namespace app {
 
+namespace {
+
+// tolerate files edited on a PC: CRLF line endings, spaces around keys and values
+std::string trim(const std::string& s) {
+  size_t b = 0, e = s.size();
+  while (b < e && (s[b] == ' ' || s[b] == '\t' || s[b] == '\r')) b++;
+  while (e > b && (s[e - 1] == ' ' || s[e - 1] == '\t' || s[e - 1] == '\r')) e--;
+  return s.substr(b, e - b);
+}
+
+}  // namespace
+
 void Settings::load(const hal::Storage& storage) {
   std::string text;
   if (!storage.read(hal::Volume::Flash, kPath, text)) return;
@@ -15,8 +27,8 @@ void Settings::load(const hal::Storage& storage) {
     pos = end + 1;
     const size_t eq = line.find('=');
     if (eq == std::string::npos) continue;
-    const std::string key = line.substr(0, eq);
-    const std::string value = line.substr(eq + 1);
+    const std::string key = trim(line.substr(0, eq));
+    const std::string value = trim(line.substr(eq + 1));
     if (key == "invert") invert = value == "1";
   }
 }

@@ -1,0 +1,3 @@
+# device files and scripts must reach the simulator byte-for-byte, whatever the OS
+sim/** -text
+*.json text eol=lf
