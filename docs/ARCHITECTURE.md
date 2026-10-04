@@ -1,164 +1,109 @@
 # Architecture
 
-How the pieces fit, what each folder owns, and the file formats they share. For *why* things are this way,
-see [DECISIONS.md](DECISIONS.md); for what's done and what's next, [STATUS.md](STATUS.md).
+How the pieces fit, what each folder owns and the formats they share. *Why*: [DECISIONS.md](DECISIONS.md).
+What's done: [STATUS.md](STATUS.md).
 
 ## The big picture
 
 ```
- Flipper UI Studio (claude.ai artifact)          this repository
- ───────────────────────────────────            ─────────────────────────────────────────────────────
- draw pictures, icons, fonts, mockups
-   │ export .h  ───────────────────────────────▶ firmware/assets/generated/*.h  (built into firmware)
-   │ export theme .zip / .b1i / .b1f ──────────▶ simulator Import Asset ──▶ sim/storage/sd/...
+ Flipper UI Studio (claude.ai artifact)              this repository
+ ─────────────────────────────────────              ───────────────────────────────────────────────────────
+ assets, mockups, UI flows
+   │ export .h (RGB565 icons, 1bpp fonts) ───────▶ firmware/assets/generated/*.h  (built in)
+   │ export flows + screens ─────────────────────▶ docs/ui/flows/  (flow-*-new.json + screens/*.png)
+   │ theme pack .zip / .c16 / .b1f ──────────────▶ sim import / Files tab ──▶ sd:/system/theme/<name>/
 
-                                                  firmware/  (runs on the ESP32 AND in the simulator)
-                                                    app/  UI + apps ──▶ hal/hal.h interfaces
-                                                                              │
-                                     ┌────────────────────────────────────────┴───────────────┐
-                                     ▼                                                        ▼
-                         ESP32 drivers (not written yet)                 simulator/core/mocks.cpp
-                                                                                              │
-                                                             ┌────────────────────────────────┤
-                                                             ▼                                ▼
-                                                   simulator/headless/                 simulator/gui/
-                                                   sim_headless (CI, cloud)            sim_gui (ImGui + SDL2)
+                         firmware/  (ESP32-S3 AND the emulator)
+                           app/ OS + modules ──▶ hal/hal.h  ◀── board/board_profile.h (pins, parts, speeds)
+                                                    │
+                     ┌──────────────────────────────┴─────────────────────────────┐
+                     ▼                                                            ▼
+        firmware/platform/esp32/ (PlatformIO)                        simulator/core/mocks.cpp
+        Adafruit ST7735, LittleFS, SD, RTClib,                                    │
+        PN532, RMT IR, NimBLE HID, WiFi                      simulator/core/commands.cpp  ◀── the one
+                                                                                  │          vocabulary
+                                               ┌──────────────────────────────────┼──────────────────────┐
+                                               ▼                                  ▼                      ▼
+                                       sim (window: web UI)            sim (terminal commands)     sim run (scripts)
 ```
 
-The rule that makes this work: **firmware code never talks to hardware directly**. Everything goes through
-`firmware/hal/hal.h`, so the same UI code runs against mocks (tests, the window) and later against real
-drivers.
+**Firmware code never talks to hardware directly.** Everything goes through `firmware/hal/hal.h`; pins only
+through `firmware/board/board_profile.h`.
 
 ## Folders
 
-| Path | Owns | Must not |
-|---|---|---|
-| `firmware/hal/hal.h` | interfaces: Clock, Display, Input, Storage, Battery, Rtc, Ir, Nfc, Wifi, Ble; the `hal::Hal` bundle | include anything but the C++ standard library |
-| `firmware/ui/` | `Framebuffer` (128×160, 1-bit), drawing (`gfx.h`), **the locked layout constants** | know about apps or hardware |
-| `firmware/app/` | `App` (screen stack, loop tick, status bar), templates (`screens.*`), radio apps (`radio_apps.cpp`), `buttons`, `battery`, `settings`, `theme` loader, `minijson` | include Arduino, OS, GUI or simulator headers |
-| `firmware/assets/` | built-in fonts/icons/splash (`generated/*.h`, exported from the studio) and the registry `assets.cpp` | be hand-edited (re-export instead) |
-| `firmware/platform/` | `progmem.h`, and `host/Arduino.h` (stand-in used only by host builds) | — |
-| `simulator/core/` | mocks, `Simulator` (virtual clock), script loader/player, asset importer | — |
-| `simulator/headless/` | `sim_headless` CLI | — |
-| `simulator/gui/` | `sim_gui` window: device view, Mock control tabs | — |
-| `simulator/third_party/` | vendored `nlohmann/json.hpp` 3.11.3 and `miniz` 3.0.2 (MIT) | be modified |
-| `sim/` | this repo's simulator project folder: `storage/`, `scripts/`, `seeds/`, `fixtures/` | — |
-| `tests/unit_tests.cpp` | exact-value checks (battery table, buttons, RTC dates, settings, JSON, file formats, importer) | — |
-| `tools/make_fixtures.py` | builds `sim/fixtures/` from the built-in asset headers | — |
+| Path | Owns |
+|---|---|
+| `firmware/hal/hal.h` | interfaces: Clock, Display (pushes a dirty window), Backlight, Input, Storage, Battery, Rtc, Buzzer, Power, Ir, Nfc, Wifi, Ble; the `hal::Hal` bundle |
+| `firmware/board/board_profile.h` | parts, pin table, SPI clock, fps cap, I2C addresses, reserved-GPIO rules |
+| `firmware/ui/` | `Framebuffer` 128×160 RGB565 (clip, dim, diff), `colors.h`, drawing + layout constants (`gfx.h`) |
+| `firmware/app/app.*` | `App`: screen stack (push/pop/replace/popTo/popToDepth/reset), gestures → screens, system events, transitions, status bar, toast, idle dim/sleep, Power button, failsafe watch, the push policy |
+| `firmware/app/input.*` | `InputRecognizer`: debounce, tap/hold/repeat/release, combos, stale buttons |
+| `firmware/app/toolkit.*`, `widgets.*`, `valuelist.*` | drawing pieces and screen templates (list, dialog, popup, page, text input, digit entry, toast, value rows) |
+| `firmware/app/shell.*` | Main-new flow: M1 boot status, M2 logo, M3 lock, M4 PIN + lockout, M5 home, M6 launcher, M7 emergency; battery, deep-sleep resume |
+| `firmware/app/security.*` | PIN hash, emergency code, the shared wrong-try counter and lockout (flash) |
+| `firmware/app/settings.*` | `/settings.ini` |
+| `firmware/app/theme.*` | built-in assets or an SD theme pack (format 2 `.c16`, format 1 `.b1i`, `.b1f` fonts) |
+| `firmware/app/app_rules.h`, `app_host.*` | rules for games/apps, the host page (G3/G4/G5), `builtin<T>()`, `validatePack()` |
+| `firmware/app/modules/` | ir, nfc, games, wifi, bt, settings - one flow each |
+| `firmware/platform/esp32/` | drivers + `main.cpp` (compiled by PlatformIO only) |
+| `simulator/core/` | mocks, `Simulator` (virtual clock, power model), `commands` (+ state JSON), `script`, `importer` |
+| `simulator/cli/` | `sim`: `server.cpp` (session), `client.cpp` (terminal), `words.cpp` (terminal words), `platform.cpp` |
+| `simulator/web/` | the window: `index.html`, `app.css`, `app.js`, fonts - embedded by `cmake/embed_web.cmake` |
+| `docs/ui/` | the Studio export: flows, mockup PNGs, registry, templates |
 
-## Firmware runtime
+## The loop (every 10 ms)
 
-- `App::begin(coldBoot)`: load `flash:/settings.ini`, load the saved theme (falls back to built-in), push
-  `SplashScreen` (cold boot) or the main menu.
-- `App::tick()` runs every 10 ms: read the battery (every 1 s, 8-sample average), turn raw button levels into
-  events (`Buttons`: Short < 500 ms, Long at 500 ms, Repeat every 120 ms for Left/Right), give events and a
-  tick to the top screen, redraw the whole frame, push it to `hal::Display` with the invert flag.
-- Screen stack changes (`push`, `pop`, `replaceTop`) are queued and applied after the current event, so a
-  screen may close itself. `onResume` runs when a screen is on top again (lists reload from their source).
-- `menuPath()` joins the stack titles (`Main/Settings/Theme`); scripts assert on it.
-- Buttons: Left moves **up** a list, Right moves **down**, OK opens, Cancel goes back. Five buttons only.
+1. Battery sample (1 s), buttons → gestures (`deferMask` from the top screen).
+2. Waking (screen off / light sleep): the waking press does nothing else; the lock screen goes up if a PIN is set.
+3. Power is handled by `App` (sleep by the Sleep mode setting) except on the boot pages.
+4. Raw levels to a level-2 app, gestures to the top screen; the stack changes after each event.
+5. Failsafe watch (Cancel held 3 s while an app is hosted), radio state edges → system events.
+6. Top screen `onTick`, then events it fired, battery checks, idle dim/sleep.
+7. Render at most every 33 ms (30 fps cap, `board::kMaxFps`): draw the stack (overlays over the dimmed
+   screen below), toast, failsafe bar; compose a running transition; **push only the rectangle that differs
+   from what the panel shows** - a still screen sends nothing.
 
-### Screen templates (`firmware/app/screens.h`)
+Screens have **mockup codes** (`code()`): `n_<code with - → _>` is the node id in the flow JSON.
 
-| Template | Class | Notes |
-|---|---|---|
-| List | `ListScreen` | items: label, icon key, action, optional right-aligned value; static items or a `Source` rebuilt on enter/resume; marquee for long selected labels; scrollbar only on overflow |
-| Detail | `DetailScreen` | title row + label/value rows from a function; value wraps to the next row if it doesn't fit |
-| Text input | `TextInputScreen` | single-row character carousel; Left/Right pick, OK add, hold OK done, Back delete |
-| Canvas | (none yet) | full 160 px, no status bar |
-| Notice | `NoticeScreen` | title + wrapped paragraph; OK/Back closes |
+## Input gestures (flow schema)
 
-### Themes (`firmware/app/theme.*`)
+tap on press, or on release (before 500 ms) when the screen's `deferMask` says the button has a hold/repeat
+meaning (lists: Cancel; text: OK + Cancel); hold once at 500 ms; repeat at 500 ms then ×0.8 down to 40 ms;
+release always; a press while another button is down is a combo (`held` set) and the held button's own
+events are dropped; buttons still down after a screen change are stale until released; debounce 25 ms.
 
-All drawing gets fonts, icons and the splash from `theme::large()`, `theme::small()`, `theme::icon(key)`,
-`theme::splash()`: the built-in asset unless a loaded theme replaces it. Icon slots and required sizes:
+## Transitions
 
-| Key | Size | Where |
-|---|---|---|
-| `battery` | 10×8 | status bar (fill = 4 columns at x 2–5, rows 3–4, drawn by firmware) |
-| `wifi`, `bluetooth` | 8×8 | status bar, only while that radio is on |
-| `ir`, `nfc`, `games`, `wifi_setup`, `bluetooth_remote`, `settings` | 12×12 | main menu |
-| fonts | large 8×8, small 6×8 | everywhere |
-| splash | 128×160 | cold boot |
+`cut`; `slide`/`push` (dir = where things move) and `fade` (through black between pages, a cross-fade onto a
+dialog) composed per frame from a snapshot of the old frame and the live new one.
 
-A file of the wrong size is skipped with a warning and the built-in asset stays.
+## Emulator session
 
-## Simulator runtime
+`sim serve` owns one `Simulator` on `<project>/storage`. HTTP on 127.0.0.1 (port in
+`<project>/.sim-session.json` with a random token; Host and Origin checked). While a window polls (header
+`X-Sim-Window`) the device runs in real time; otherwise only commands move time. Buttons tapped faster than a
+loop tick are held 50 ms. A `sim gui` session ends 4 s after its window stops polling.
 
-- `Simulator` owns every mock plus the `App`, and a `VirtualClock`. `advanceTo(t)` runs 10 ms ticks
-  (`MockWifi::tick()` then `App::tick()`), so a run is deterministic on every machine.
-- `restart(coldBoot)` power-cycles the device: new `App`, radios off; storage, cards in the field, bonds and
-  scripted networks stay.
-- Mocks expose setters; **the GUI and scripts call the same setters**.
-- `ScriptPlayer` plays a parsed script against a running simulator (the window's Scripts tab);
-  `runScript` does the same headless on a temporary copy of `storage/` (+ seed).
-- `importAsset` writes straight into the storage folder (like copying onto the card from a PC).
-- `sim_gui` keyboard/mouse only write a button when its state changes, so a playing script's presses survive.
+API: `GET /api/state[?full=0]`, `GET /api/frame` (RGB565 LE + backlight byte), `GET /api/screen.png?scale=`,
+`POST /api/cmd` (a command object), `POST /api/words` (terminal words), `/api/pause`, `/api/files`,
+`/api/import?name=`, `/api/reset-storage`, `/api/open-folder`, `/api/keys`, `/api/script/run|stop|run-all`,
+`/api/record`, `/api/save-log`, `/api/close`.
 
-## Storage layout (device paths)
+## File formats
 
-| Path | What | Written by |
-|---|---|---|
-| `flash:/settings.ini` | `invert=0/1`, `theme=<folder>` (omitted when built-in) | Settings |
-| `sd:/ir/uncategorized/<name>.json` | saved IR remote | IR > Learn (`new_remote`, `new_remote_2`, ...) |
-| `sd:/nfc/<uid>.json` | NFC dump | NFC > Read card |
-| `sd:/system/theme/<name>/` | theme pack | Import Asset / copy from PC |
-| `sd:/media/*.b1i` | pictures | Import Asset |
-| `sd:/system/fonts/*.b1f` | fonts | Import Asset |
-| `sd:/games/` | reserved | — |
-
-In the simulator these are folders: `<project>/storage/flash/...` and `<project>/storage/sd/...`.
-
-## File formats (shared with Flipper UI Studio — keep in sync)
-
-**Bit order, everywhere** (framebuffer, asset headers, `.b1i`, `.b1f`): `idx = y*w + x`, `byte = idx/8`,
-`bit = idx%8` (LSB-first), 1 = ink. This is *not* Adafruit `drawBitmap()` order.
-
-`.b1i` image/animation (little-endian):
-
-| Offset | Size | Field |
-|---|---|---|
-| 0 | 4 | `"B1I"` + version `0x01` |
-| 4 | 2 | width |
-| 6 | 2 | height |
-| 8 | 2 | frame count |
-| 10 | 2 | frame delay ms (0 for stills) |
-| 12 | … | frames, each `ceil(w*h/8)` bytes |
-
-`.b1f` fixed-cell font:
-
-| Offset | Size | Field |
-|---|---|---|
-| 0 | 4 | `"B1F"` + version `0x01` |
-| 4 | 1 | glyph width |
-| 5 | 1 | glyph height |
-| 6 | 2 | glyph count N |
-| 8 | N | character code of each glyph |
-| 8+N | … | glyphs, each `ceil(w*h/8)` bytes |
-
-`theme.ini` (inside `<root>/<name>/`):
-
-```ini
-[theme]
-name=Night
-font_large=fonts/large.b1f
-font_small=fonts/small.b1f
-splash=splash.b1i
-
-[icons]
-settings=icons/settings.b1i
-```
-
-Paths are relative to the theme folder and may not contain `..`. Unknown icon keys are ignored.
-
-Asset headers (`firmware/assets/generated/`): the studio's Export tab format — `PIC_<IDENT>[]`, and for fonts
-`<IDENT>_W/_H/_COUNT/_CHARSET/_GLYPHS`. Register them in `firmware/assets/assets.cpp`.
-
-IR remote JSON: `{"name", "protocol", "address": "0x04", "command": "0x08"}` or `"raw": ["us", ...]` for RAW.
-NFC dump JSON: `{"uid", "type", "blocks": ["hex", ...]}`. Both are written and read by `minijson` (flat
-objects only).
-
-## Mock-scripts
-
-The full event and check vocabulary is documented at the top of `simulator/core/script.h`; that comment is
-the source of truth. Scripts live in `<project>/scripts/`, and `import` paths are relative to the project.
+| File | Format |
+|---|---|
+| asset headers | RGB565 `uint16_t`, `idx = y*w + x`, `0xF81F` transparent; fonts 1bpp LSB-first, colour chosen when drawn |
+| `.c16` | `"C16" 01`, u16 w, h, frames, delay ms, key colour; frames of w*h RGB565 LE (Studio THEME_FORMAT_SPEC) |
+| `.b1i` / `.b1f` | format-1 images (ink → white) / 1bpp fonts, as before |
+| `theme.ini` | `[theme] format=2 name= font_large= font_small= splash= wallpaper=` and `[icons] key=path` |
+| `flash:/settings.ini` | `key=value`: brightness, dim_after_s, sleep_mode, sleep_after_min, low_battery_pct, button_sound, notify_sound, volume, lock_message, clock_24h, theme |
+| `flash:/security.ini` | pin (salted hash), wrong, rounds, lockout_s, lockout_until (RTC epoch) |
+| `flash:/wifi.ini` | `ssid<TAB>password` per line (plain text, as the plan says) |
+| `flash:/ble_seen.ini` | `host<TAB>HH:MM` last connected |
+| `sd:/ir/<CATEGORY>.ir` | `NAME<TAB>PROTOCOL<TAB>0xADDR<TAB>0xCMD<TAB>raw,us,...` |
+| `sd:/nfc/<NAME>.nfc` | `type=`, `uid=`, one `block=` per block (`??..` = unreadable) |
+| `sd:/games/<dir>/manifest.ini` | `name= type=canvas|screens engine=sprite2d|menu_flow scene=` / `page=kind|TITLE|...`; `bind=`, `bypass=` refused |
+| `sd:/games/save/<id>.ini` | an app's `key=value` saves |
+| scripts | `{name, initial_state, events:[{t_ms, type, ...}]}` - events are commands or `assert` checks (`simulator/core/script.h`) |

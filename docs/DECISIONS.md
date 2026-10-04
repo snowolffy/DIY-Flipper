@@ -1,67 +1,98 @@
 # Decisions
 
-What was decided, and why, so a later session doesn't re-open settled questions by accident. Change a
-decision on purpose: update this file in the same commit and say why.
+What was decided and why, so a later session doesn't re-open settled questions by accident. Change a
+decision on purpose: update this file in the same commit and say why. The plans
+([firmware UI](PLAN-firmware-ui.md), [emulator](PLAN-emulator.md)) win over older entries; locked plan items
+(**[ล็อกแล้ว]**) are not repeated here.
 
 ## Product scope
 
-- **DIY Flipper only.** This repo, the simulator and Flipper UI Studio serve the DIY Flipper handheld and
-  nothing else. Don't bring in code, assets, paths or conventions from other projects.
-- **Two tools:** the pixel/asset designer stays a Claude artifact ("Flipper UI Studio"); the emulator is this
-  native app. The designer is not ported into the app. The link between them is one-way and manual: export
-  from the studio, then either build it in (asset headers) or Import Asset into the simulator.
+- **DIY Flipper only.** No code, assets, paths or conventions from other projects.
+- **Two tools:** Flipper UI Studio (claude.ai artifact) designs assets, mockups and flows; this repo builds
+  them. The link is one-way: export from the Studio into `docs/ui/` and `firmware/assets/generated/`.
+- The emulator is **one exe** (`sim`) that runs on Linux and Windows on the real project folder.
 
-## Hardware assumptions (confirm before writing real drivers)
+## Hardware (board profile: `firmware/board/board_profile.h`)
 
-- Board: ESP32 (it has both WiFi and BLE).
-- Display: ST7735 128×160, used strictly 1-bit black/white.
-- RTC: DS3231. NFC: PN532. Five buttons: OK, Cancel, Left, Right, Power.
-- Battery: single-cell LiPo read through an ADC divider; percentage from a lookup table
-  (`firmware/app/battery.h`) with an 8-sample moving average.
+- ESP32-S3-DevKitC-1 N16R8, ST7735 1.8" RGB565, 4-button module + Power micro switch, PN532 I2C, DS3231,
+  SPI SD, separate IR TX/RX, KY-006 buzzer, LiPo + TP4056 + MT3608 + toggle switch, 100k/100k divider.
+- Pins: the plan's draft table, plus PN532 IRQ 41 / RST 42 (the library wants them). Reserved and refused by
+  the pin test: 26-37 (flash + octal PSRAM; the plan listed 35-37 - the N16R8 uses 33-37 for PSRAM and 26-32
+  for flash, so all of 26-37 is out), 0/3/45/46, 19/20, 43/44, 38/48.
+- Display SPI 27 MHz (a full frame ≈ 12 ms), 30 fps cap. Button polarity is a profile setting (unknown yet).
 
-## UI (locked; mockups in the studio use the same numbers)
+## UI rules taken from the plans and flows
 
 | Topic | Decision | Why |
 |---|---|---|
-| Tone | Flipper Zero–style pixel art, utilitarian layout | 1-bit art reads as intentional; the device is a tool |
-| Fonts | Large 8×8 (menus, titles, input), Small 6×8 (status bar, values) | 8 px is the smallest comfortable size on a 1.8" panel (~0.22 mm/px); 6 px fits 21 chars per row |
-| Small font face | Silkscreen, caps only, glyphs centred in the 6 px cell | proportional glyphs left-aligned made "WIFI" read "WI FI" |
-| Icons | status 8×8 (battery 10×8), menu 12×12 | fit a 12 px status bar and 16 px list rows |
-| Status bar | 12 px, on List/Detail/Text-input, off on Canvas/Game | games and animations need all 160 px |
-| Status bar left slot | clock on the home menu (`--:--` without time), otherwise the section name | tells you where you are; Detail pages show their parent section |
-| Status bar right slot | battery; WiFi/BT icons only while that radio is on | agreed before this repo existed |
-| List | 16 px rows, 9 visible, icon at x=2, label at x=18 (13 large chars), scrollbar only on overflow | "Bluetooth Remote" is 16 chars: it scrolls on the selected row instead of shrinking every label |
-| Detail | label left, value right, value wraps to the next row | every Detail screen is key/value data |
-| Navigation | Left = up, Right = down (wraps), OK = open, Cancel = back | only five buttons |
-| Text input | single-row carousel; hold OK = done, Back = delete | decided before the plan |
-| Boot splash | static image, cold boot only | 2.5 KB, instant; animation costs flash and boot time |
-| Codename | `pic.h` | nod to the old project's asset files |
-| Personalisation | Invert is a device setting; themes swap artwork only | layout-changing themes would multiply the UI code |
+| Buttons | plan §1.4 / Studio player v8 (tap on press unless the screen gives the button a hold meaning, hold 500, repeat 200 ×0.8 ≥ 40, combo drops the held button's own events, release event) | replaces the old Short/Long/Repeat rules |
+| Colours | grey scale per the plan; all colours in `ui/colors.h` (`kAccent` = white until an accent is chosen); dim behind dialogs = channel × 100/256 | the mockups' exact values (white → 0x630C) |
+| Invert | removed everywhere (setting, scripts, display call) | decided: no display invert |
+| Screen codes | the mockup codes (M1, S2, B-M0, ...) | trace code ↔ flow node |
+| Layout | measured from the mockup PNGs (status text y2, title y14, rows 14 px, KV x5..121, dialog hint 5 px under the lines ...) | "match screens/*.png in position and size" |
 
-## The dev-tool plan's open questions
+## Decisions made while building (plan items marked [ร่าง] and section 7)
 
-| Question | Answer |
-|---|---|
-| Is `firmware/` the repo checkout or a copy/symlink? | The project folder **is** the repo root; simulator data lives in `sim/`. No symlinks (Windows needs Developer Mode and git mangles them there). Two builds side by side: `git worktree`. |
-| Record a live session as a script? | Deferred to v1.1. |
-| Where do imported assets land? | theme `.zip` → `sd:/system/theme/<name>/`, `.b1i` → `sd:/media/`, `.b1f` → `sd:/system/fonts/`. Icons only arrive inside themes. |
+| Item | Decision | Why |
+|---|---|---|
+| Lockout | 3 wrong tries → 30 s, each further lockout doubles (1, 2, 4, 8 min), cap 10 min; a correct entry resets; 3 tries again after each lockout | the plan's example; tries per round keep the "N tries left" message meaningful |
+| Lockout over a reboot | `security.ini` keeps the counter and the lockout; the end time uses the DS3231 when it has time, otherwise the whole lockout is served again | the plan: a reboot must not clear it; no RTC → err on the safe side |
+| Emergency code | 8 digits **40917263**, assembled from hash constants in `security.cpp` only inside the one check | the plan: scattered constants, one check |
+| Emergency entry | Power held on M1, or Cancel held + OK | a second way in case Power is hard to hold while booting |
+| Lock message | max 20 characters (one line), upper and lower case + space | the plan's proposal |
+| Lock clock | the 8×8 font at ×3 with a narrow colon | the plan allows it; a big digit font can come later |
+| Toasts / results | toast 1.2 s; "Sent" 1 s; "Saved" 1.2 s; "Connected" 1.5 s; "Wrong PIN" 1.5 s (flow timers) | the flows' numbers |
+| Timeouts | IR learn 15 s, WiFi connect 15 s | the plan's "~15 s" |
+| Time zone | fixed UTC+7; the DS3231 keeps local time | plan §7 |
+| Firmware page joke | codename "PIE"; no joke yet | left open as allowed |
+| Accent colour | none (`kAccent` = white) | plan §7 |
+| Settings save | every change saved to flash on OK (numbers on OK, toggles at once, brightness live while editing) | plan [ร่าง] |
+| Number rows | Brightness 10-100 % step 10; Dim after 10/20/30/60/120/300 s or Never; Sleep after 1/2/3/5/10/15/30 min; Low battery 5-30 % | readable steps with < > |
+| Sleep modes | Deep = deep sleep (OK/Power wake, back to the open module); Light = light sleep; Off / Never = screen off only (Never: no idle sleep at all); Power always sleeps by the mode (Never → screen off) | the flow lists the four; Power must work |
+| Deep sleep resume | back to the launcher row and the module that was open (not deeper pages), through the lock screen | serialising any page is fragile; module level matches "same screen" closely |
+| Low battery | toast + beep at the Low battery setting; at ≤ 3 % save settings and switch off; apps get `onSaveRequest` below 5 % | plan 3.2 |
+| Bottom bars | lists show n/N (info rows not counted); BT menus show none (mockup); pages show their button hints | mockups |
+| Lists wrap | < at the top goes to the bottom and back | 2 buttons only: wrapping saves presses |
+| BT advertising | starts on entering Bluetooth, stops on leaving when nothing is connected; the device name "Pie Controller"; new hosts confirm with a dialog (no passkey shown, as in the mockup) | plan [ร่าง] + mockups |
+| BT keys group | "KEYS" page (code B1k): ↑ ↓ ← → PgUp PgDn Esc Enter | the flow says it exists without a node |
+| BT host names | the emulator uses names; on the device a bond keeps only an address, so hosts show as addresses | NimBLE bonds store no name |
+| WiFi disconnect | immediate, toast "DISCONNECTED", no dialog | plan [ร่าง] |
+| NFC cards | MIFARE Classic: every block with the default key, unreadable sectors kept as `??`; other cards: UID only | plan [ร่าง] |
+| NFC emulate | allowed for UID-only dumps and complete Classic dumps; otherwise E1p "needs full MIFARE authentication" | the mockup's note |
+| NFC write | block 0 only on a magic card; skipped sectors reported on W5a; type must match first | the flow |
+| IR storage | one file per category on the SD card | rename/delete a category = one file |
+| Categories order | alphabetical (the mockup shows creation order) | files have no creation order on FAT/LittleFS |
+| Games | built-in Snake (level 0), Pong (level 1), Reaction (level 2) - one per bypass level; SD packs: `sprite2d` shows the pack's scene (a minimal engine), `menu_flow` pages as standard lists/messages | the plan needs the mechanisms; a full pack engine is not specified |
+| Failsafe | watched by `App` from the debounced Cancel level, so it works at every level and over the pause menu; bar from 1.5 s; G5 0.5 s | plan 3.2 |
+| `onExit` budget | 200 ms, measured; the firmware is single-threaded, so it can't be cut mid-call | reported as a limit |
+| Theme picker | Settings > System > Theme (code Y7) appears only when theme packs are on the SD card | themes existed before; the flow has no row for them |
+| Home wallpaper | the theme's `wallpaper` (128×137) or a light-grey placeholder | the mockup's wallpaper is a placeholder sketch |
+| Boot logo | cut from the "Boot Load" mockup (`tools/png_to_pic.js`) - the Studio export has no logo asset | match the mockup |
+| Catalog events | `sd_removed/inserted`, `battery_low/critical`, `wifi_lost` fire although no transition uses them | they are in every flow's event list |
+| Transitions | fade between pages goes through black; a fade onto a dialog cross-fades | M2 note "fade to black"; dialogs should keep the page visible |
 
-## Technical
+## Emulator
 
 | Decision | Why |
 |---|---|
-| Own 1-bit framebuffer + drawing (`firmware/ui`), not Adafruit_GFX | the core must build without Arduino; Adafruit's bitmap bit order differs from ours |
-| C++17, CMake, warnings as a quality gate (`-Wall -Wextra`, MSVC `/W4`) on our targets only | builds on GCC/Clang/MSVC; fetched code isn't ours to fix |
-| Virtual clock with 10 ms ticks | same script → same frames on every OS; screen hashes can be pinned |
-| Regression by framebuffer hash (FNV-1a 64 of the shown pixels) | cheap, exact; update deliberately when a UI change is intended |
-| Mocks change only through setters shared by GUI and scripts | a live session and a script exercise the same code |
-| Dear ImGui 1.91.5 + SDL2 2.30.9 via FetchContent, behind `DIYF_BUILD_GUI` | headless builds stay fast and offline |
-| Static MSVC runtime, static SDL2 | `sim_gui.exe` runs with no installer or DLLs |
-| Vendored `nlohmann/json` and `miniz` | no network needed for headless builds |
-| `sim/**` marked `-text` in `.gitattributes` | device files must reach the simulator byte-for-byte on Windows (a CRLF bug in `settings.ini` was caught by CI) |
-| Settings and theme parsers trim CR/space | files edited on a PC are CRLF |
-| Import writes straight to the storage folder, ignoring the SD-present and fail-writes switches | it models copying onto the card from a PC |
-| Theme loader skips a bad file and keeps the built-in one | a broken theme can't make the device unusable |
-| Radios reset on restart; storage, bonds, cards in the field don't | those live outside the device |
-| Sim_gui "Run here" restarts the device first by default | scripts assume their own start state; without it presses land on the wrong screen |
-| Pushing straight to `main` | single-developer repo; CI on every push is the gate |
+| Web UI served by the exe (cpp-httplib), opened as a Chrome/Edge app window | one portable file, no GUI toolkit; the same page works for `shot-ui` |
+| Session file + random token, Host/Origin checks | only this machine and this page can drive it |
+| Real time while a window is open, virtual time otherwise | the plan; terminal sessions repeat exactly |
+| `sim press` from the terminal waits 300 ms after the release (logged as `wait 300`) | the next `sim shot` shows where the press led, not a half-finished transition |
+| Taps shorter than 50 ms are held to 50 ms | a key tap inside one loop tick would never reach the firmware |
+| Frame hash = FNV-1a 64 over the RGB565 pixels as 16-bit little-endian | the plan |
+| `display_static_ms` check | proves a still screen isn't pushed again |
+| The plan's old scripts: invert ones deleted; the rest rewritten for the colour UI with the same intent | their menu paths belonged to the 1-bit UI |
+| macOS dropped from CI | allowed by the plan |
+
+## ESP32-S3 libraries
+
+| Part | Library | Why |
+|---|---|---|
+| Display | Adafruit ST7735 + GFX | simple, windowed `writePixels` for dirty rectangles |
+| Flash / SD | Arduino core LittleFS / SD | built in |
+| RTC | Adafruit RTClib | standard DS3231 support |
+| NFC | Adafruit PN532 (I2C) | Classic auth/read/write; emulation is limited by the chip |
+| IR | ESP-IDF RMT driver directly | the plan asks for RMT; own NEC/Samsung/Sony/RC5 coder |
+| BLE | NimBLE-Arduino 1.4.3 (HID) | small, bonds with LRU drop, passkey confirm callback |
+| Platform | espressif32 6.9.0 (Arduino core 2.0.17) | stable 2.x APIs (LEDC, RMT, sleep) |

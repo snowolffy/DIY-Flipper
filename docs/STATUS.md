@@ -1,71 +1,55 @@
 # Status
 
-Last updated: 2026-09-30, at commit `4081a00` (CI green on Linux, Windows, macOS).
-**Update this file at the end of every piece of work** (what changed, CI state, what's next).
+Last updated: 2026-10-04, branch `rework/color-ui-emulator` (CI green: Linux, Windows, ESP32-S3).
+**Update this file at the end of every piece of work.**
 
 ## Where things live
 
 | Thing | Location |
 |---|---|
-| Firmware + simulator | this repo, branch `main` |
-| Flipper UI Studio (asset designer) | https://claude.ai/artifact/FAn19c48h4MqHxxMmpA4qK |
-| Its firmware-path settings | studio database doc `settings/firmware`: folder `firmware/assets/generated/`, registry `firmware/assets/assets.cpp`, theme root `/system/theme/` |
-| Windows build | Actions → latest CI run → artifact `diy-flipper-simulator-windows` (`sim_gui.exe`, `sim_headless.exe`) |
-| Plans this work follows | "DIY Flipper — UI Customization & Design Tool Plan" and "DIY Flipper Dev Tool — Plan Document" (given in chat, not in the repo); decisions from both are in [DECISIONS.md](DECISIONS.md) |
+| Firmware + emulator | this repo; the colour rework is on branch `rework/color-ui-emulator` (not merged to `main` yet) |
+| Flipper UI Studio | https://claude.ai/artifact/FAn19c48h4MqHxxMmpA4qK (not edited by this work) |
+| Emulator wireframe | https://claude.ai/artifact/7nqQ71Ka3WAyEuWYiMSe7F |
+| UI flows + mockups | `docs/ui/flows/` (Studio export, unpacked from the inbox zip) |
+| Windows emulator | Actions → CI run → artifact `diy-flipper-sim-windows` (`sim.exe`) |
+| Plans | [firmware UI](PLAN-firmware-ui.md), [emulator](PLAN-emulator.md); the report on them: [REPORT-2026-10-04.md](REPORT-2026-10-04.md) |
 
-## Dev-tool plan progress
+## Done
 
-| Step | What | State | Commit |
-|---|---|---|---|
-| 1 | core library: HAL, mocks for display, input, storage, battery, RTC | done | `51f8c9d` |
-| 2 | headless runner + first scenario (boot → main menu → Settings) | done | `51f8c9d` |
-| 3 | native window: framebuffer, keyboard → buttons | done | `4df4b18` |
-| — | fix: CRLF `settings.ini` | done | `8679d01` |
-| 4 | IR, NFC, WiFi, BLE mocks + live panels; scripts in the live window | done | `e0dfe2a` |
-| 5 | project folders + recent list | done | `4081a00` |
-| 6 | Import Asset (`.b1i` / `.b1f` / theme `.zip`) | done, plus firmware theme loader | `4081a00` |
-| 7 | record a live session as a script | deferred to v1.1 | — |
+| Plan phase | State |
+|---|---|
+| A. RGB565 assets, colour framebuffer, theme format 2 (`.c16`) | done |
+| B. input gestures, toolkit, widget screens, transitions | done |
+| C. board profile, Buzzer/Backlight/Power HAL, push policy (diff, 30 fps), mocks, script commands/checks | done |
+| D. OS shell: boot status, logo, lock + PIN + lockout (survives reboot), home, launcher, emergency menu | done |
+| E. app host + `app_rules.h`: bypass 0/1/2 with build-time checks, failsafe, battery save, `validatePack()` | done |
+| F. modules: Settings, WiFi, Bluetooth, IR, NFC, Games - every state of the 7 `-new` flows | done |
+| tests: 96/96 flow screens reached by scripts, 22/22 system events fired, unit tests, app-rule build checks | done |
+| G. `sim` exe: session server, terminal commands, window per the wireframe, shot / shot-ui | done |
+| H. ESP32-S3 PlatformIO target + drivers + CI job | **compiles; never run on hardware** |
+| I. ImGui window and `sim_headless` removed, CI Linux + Windows + ESP32, docs | done |
 
-## What the firmware does today
+## Drivers (ESP32-S3)
 
-- Boot splash (cold boot, 1.5 s or any key) → main menu: IR, NFC, Games, WiFi Setup, Bluetooth Remote, Settings.
-- IR: Learn (listen → show protocol/address/command → save `sd:/ir/uncategorized/new_remote*.json`), list saved
-  remotes, send.
-- NFC: Read card (show type/UID/blocks → save `sd:/nfc/<uid>.json`), list and view dumps.
-- WiFi Setup: scan, password via the carousel, connect, failure screen, disconnect.
-- Bluetooth Remote: advertise, passkey pairing, media keys (hold Left/Right = volume), bond-list-full screen.
-- Settings: Invert, Date & time, Firmware (version 0.1.0, codename `pic.h`), Theme (built-in or any pack on SD).
-- Errors are shown, not swallowed: no SD card, write failures, bad theme files.
-- Games: placeholder ("Not built yet").
+Every driver below **compiles but has never run on hardware**. Bring them up in the order of
+[BRINGUP.md](BRINGUP.md).
 
-## Tests
+| Driver | File | Note |
+|---|---|---|
+| ST7735 display, backlight PWM | `platform/esp32/drivers_basic.cpp` | colour order may need `INITR_GREENTAB` |
+| buttons (5) | same | polarity from the board profile |
+| LittleFS, SD (FAT32) | same | SD re-detected once a second |
+| DS3231, battery ADC, buzzer, light/deep sleep, power-off, restart | same | deep sleep wakes on OK/Power (ext1 any-low) |
+| IR send/receive (RMT) | `platform/esp32/drivers_radio.cpp` | NEC/Samsung/Sony decoded, others RAW; RC5 send only |
+| PN532 (I2C) | same | Classic default key only; emulation shows the PN532's own ID |
+| WiFi + SNTP | same | |
+| BLE HID (NimBLE) | same | hosts named by address; passkey confirm blocks the BLE task up to 25 s |
 
-- `ctest`: `unit_tests` + one test per script in `sim/scripts/` (10 scripts) + `gui_smoke` when the GUI is built on Linux.
-- Pinned screen hashes: `boot-to-settings` (Settings screen `2e55045db62ee172`), `theme-import` (themed splash
-  `bdbe2bb0b6a1dc06`).
-- CI: `.github/workflows/ci.yml`, headless and GUI jobs on ubuntu/windows/macos; GUI job uploads the Windows build.
+## Next
 
-## Known gaps
-
-- No ESP32 target yet: no real drivers, no PlatformIO/Arduino project.
-- Not simulated: NFC write/emulate, IR raw capture from the GUI, NTP time over WiFi, sleep/power.
-- No picture viewer for `sd:/media/*.b1i`; Games has no games.
-- Small font `&` looks like `$` (fix the glyph in the studio and re-export `font_small.h`).
-- WiFi passwords are not saved; there is no saved-networks list.
-- Invert changed while writes fail is not saved and no message says so.
-
-## Next, in the order I'd do them
-
-1. ESP32 target: PlatformIO project under `firmware/platform/esp32/` implementing `hal::*` with real drivers
-   (ST7735 push of the 1-bit frame, buttons, SD + LittleFS, ADC, DS3231, IR, PN532, WiFi, BLE HID). Confirm the
-   hardware assumptions in DECISIONS.md first.
-2. Games (Canvas template) and a `/media` picture viewer.
-3. Saved WiFi networks; NTP → RTC.
-4. v1.1: record a live session as a script.
-
-## Resuming in a new session
-
-1. The repo's `CLAUDE.md` loads automatically; read this file, then DECISIONS.md and ARCHITECTURE.md.
-2. Build and run the tests (commands in CLAUDE.md) before changing anything; they should be green.
-3. Check the latest CI run on GitHub Actions.
-4. If the task touches assets or layout, open Flipper UI Studio too: both sides must agree.
+1. Owner: check the pin table against the real boards, then [BRINGUP.md](BRINGUP.md) step by step.
+2. Merge `rework/color-ui-emulator` into `main` after a look (PR).
+3. Export more assets from the Studio if wanted: a boot logo asset (now cut from the mockup), a large digit
+   font for the lock clock, a theme pack in format 2 to test against the real Studio output.
+4. Later: a real pack engine for SD games (only a scene viewer and menu_flow pages now), NFC emulation with a
+   chip that can present any UID, BLE host names.
