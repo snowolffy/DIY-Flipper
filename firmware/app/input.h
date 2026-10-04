@@ -25,7 +25,7 @@ constexpr uint32_t kDebounceMs = 25;
 
 enum class Gesture : uint8_t { Tap, Hold, Repeat, Release };
 
-constexpr uint8_t bit(hal::Button b) { return (uint8_t)(1u << static_cast<int>(b)); }
+constexpr uint8_t buttonBit(hal::Button b) { return (uint8_t)(1u << static_cast<int>(b)); }
 
 struct InputEvent {
   hal::Button button;

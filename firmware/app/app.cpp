@@ -43,8 +43,8 @@ const char* sysEventName(SysEvent e) {
 
 uint8_t Screen::deferMask() const {
   switch (inputMode()) {
-    case InputMode::List: return bit(hal::Button::Cancel);
-    case InputMode::Text: return bit(hal::Button::Ok) | bit(hal::Button::Cancel);
+    case InputMode::List: return buttonBit(hal::Button::Cancel);
+    case InputMode::Text: return buttonBit(hal::Button::Ok) | buttonBit(hal::Button::Cancel);
     case InputMode::Normal: break;
   }
   return 0;

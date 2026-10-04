@@ -62,7 +62,7 @@ class KeysScreen : public ListScreen {
       : ListScreen(code, title, title), keys_(std::move(keys)), code0_(code) {}
   // B1x while the host is gone (the flow's "Not connected" state)
   const char* code() const override { return down_ ? "B1x" : code0_; }
-  uint8_t deferMask() const override { return bit(Button::Ok) | bit(Button::Cancel); }
+  uint8_t deferMask() const override { return buttonBit(Button::Ok) | buttonBit(Button::Cancel); }
   void onEnter(App& app) override {
     down_ = !connected(app);
     ListScreen::onEnter(app);

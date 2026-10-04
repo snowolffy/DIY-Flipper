@@ -194,7 +194,7 @@ class HostScreen : public app::Screen {
   bool hostsApp() const override { return true; }
   bool rawInput() const override { return e_.level == Bypass::RawInput; }
   // a short Cancel reaches the app on release, because Cancel hold is the host's (levels 0 and 1)
-  uint8_t deferMask() const override { return app::bit(Button::Cancel); }
+  uint8_t deferMask() const override { return app::buttonBit(Button::Cancel); }
 
   void onEnter(App&) override { start(); }
   void onResume(App&) override {

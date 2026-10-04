@@ -22,7 +22,7 @@ esp::NfcDrv nfcDrv;
 esp::WifiDrv wifiDrv;
 esp::BleDrv bleDrv;
 
-hal::Hal hal{clockDrv, displayDrv, backlightDrv, inputDrv, storageDrv, batteryDrv, rtcDrv,
+hal::Hal theHal{clockDrv, displayDrv, backlightDrv, inputDrv, storageDrv, batteryDrv, rtcDrv,
              buzzerDrv, powerDrv, irDrv,      nfcDrv,   wifiDrv,  bleDrv};
 app::App* theApp = nullptr;  // ~90 KB of frame buffers: on the heap (PSRAM)
 
@@ -38,7 +38,7 @@ void setup() {
   buzzerDrv.begin();
   irDrv.begin();
   Serial.printf("DIY Flipper %s on %s, PSRAM %u bytes free\n", app::App::kVersion, "ESP32-S3", (unsigned)ESP.getFreePsram());
-  theApp = new app::App(hal);
+  theApp = new app::App(theHal);
   theApp->begin();
 }
 

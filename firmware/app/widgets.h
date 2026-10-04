@@ -230,7 +230,7 @@ class DigitEntryScreen : public BasicScreen {
       : BasicScreen(std::move(code), ""), titleText_(std::move(title)), n_(digits), done_(std::move(done)),
         leave_(std::move(leave)) {}
   bool statusBar() const override { return false; }
-  uint8_t deferMask() const override { return bit(hal::Button::Cancel); }
+  uint8_t deferMask() const override { return buttonBit(hal::Button::Cancel); }
   void onInput(App& app, const InputEvent& e) override;
   void draw(App& app, ui::Framebuffer& fb) override;
   void clear() { digits_.clear(); }

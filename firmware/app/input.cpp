@@ -40,7 +40,7 @@ void InputRecognizer::update(const hal::Input& in, uint32_t now, uint8_t deferMa
           if (s.held < 0 || (int32_t)(o.downAt - st_[s.held].downAt) < 0) s.held = (int8_t)j;
         }
         if (s.held >= 0) st_[s.held].comboUsed = true;
-        s.deferred = s.held < 0 && (deferMask & bit(b));
+        s.deferred = s.held < 0 && (deferMask & buttonBit(b));
         if (!s.deferred) emit(InputEvent{b, Gesture::Tap, s.held, 0, 0});
       } else {
         const uint32_t dur = now - s.downAt;

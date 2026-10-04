@@ -73,7 +73,7 @@ static void gestures() {
   }
   {  // deferred: tap on release before 500 ms; a long press gives hold and no tap
     Rec x;
-    const uint8_t d = app::bit(Button::Cancel);
+    const uint8_t d = app::buttonBit(Button::Cancel);
     x.step(10, d);
     x.in.set(Button::Cancel, true);
     x.step(100, d);
@@ -118,7 +118,7 @@ static void gestures() {
   }
   {  // combo: hold OK, tap > : the > tap carries held=OK; OK's own tap/release are skipped
     Rec x;
-    const uint8_t d = app::bit(Button::Ok);
+    const uint8_t d = app::buttonBit(Button::Ok);
     x.step(10, d);
     x.in.set(Button::Ok, true);
     x.step(100, d);

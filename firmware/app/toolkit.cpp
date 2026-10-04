@@ -14,20 +14,20 @@ namespace col = ui::color;
 
 namespace {
 
-const FontEntry& F() { return theme::small(); }
+const FontEntry& font() { return theme::small(); }
 
-int16_t textW(const std::string& s) { return textWidth(F(), s.c_str()); }
+int16_t textW(const std::string& s) { return textWidth(font(), s.c_str()); }
 
 void text(Framebuffer& fb, int16_t x, int16_t y, const std::string& s, Color c) {
-  drawText(fb, F(), x, y, s.c_str(), c);
+  drawText(fb, font(), x, y, s.c_str(), c);
 }
 
 void centred(Framebuffer& fb, int16_t y, const std::string& s, Color c, int16_t x0 = 0, int16_t w = kScreenW) {
-  drawTextCentered(fb, F(), y, s.c_str(), c, x0, w);
+  drawTextCentered(fb, font(), y, s.c_str(), c, x0, w);
 }
 
 void right(Framebuffer& fb, int16_t r, int16_t y, const std::string& s, Color c) {
-  drawText(fb, F(), (int16_t)(r - textW(s)), y, s.c_str(), c);
+  drawText(fb, font(), (int16_t)(r - textW(s)), y, s.c_str(), c);
 }
 
 void icon(Framebuffer& fb, int16_t x, int16_t y, const char* key, Color c, int scale = 1) {
