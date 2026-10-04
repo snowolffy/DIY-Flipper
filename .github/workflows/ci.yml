@@ -47,7 +47,12 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          pio run -e esp32s3 2>&1 | tee build.log
+          if ! pio run -e esp32s3 2>&1 | tee build.log; then
+            # the compiler's errors as one annotation (readable without the raw log)
+            msg=$(grep -E "error|Error|undefined reference|not declared|No such file" build.log | grep -v "^Compiling" | head -n 60 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=ESP32-S3 build::${msg:-see the log}"
+            exit 1
+          fi
       - name: Flash and RAM use
         run: |
           grep -E "^(RAM|Flash):" build.log | tee -a "$GITHUB_STEP_SUMMARY"
