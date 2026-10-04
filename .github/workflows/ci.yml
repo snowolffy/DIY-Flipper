@@ -49,5 +49,6 @@ jobs:
       - name: Flash and RAM use
         run: |
           grep -E "^(RAM|Flash):" build.log | tee -a "$GITHUB_STEP_SUMMARY"
-          echo "::notice title=ESP32-S3 size::$(grep -E '^(RAM|Flash):' build.log | tr -s ' ' | tr '\n' ' ')"
+          msg=$(grep -E '(RAM|Flash):' build.log | sed 's/\x1b\[[0-9;]*m//g' | tr -s ' ' | tr '\n' ' ' | sed 's/%/%25/g')
+          echo "::notice title=ESP32-S3 size::${msg:-size lines not found}"
           pio run -e esp32s3 -t size | tail -n 15 | tee -a "$GITHUB_STEP_SUMMARY"
