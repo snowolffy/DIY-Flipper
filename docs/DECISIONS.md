@@ -94,5 +94,5 @@ decision on purpose: update this file in the same commit and say why. The plans
 | RTC | Adafruit RTClib | standard DS3231 support |
 | NFC | Adafruit PN532 (I2C) | Classic auth/read/write; emulation is limited by the chip |
 | IR | ESP-IDF RMT driver directly | the plan asks for RMT; own NEC/Samsung/Sony/RC5 coder |
-| BLE | NimBLE-Arduino 1.4.3 (HID) | small, bonds with LRU drop, passkey confirm callback |
+| BLE | NimBLE-Arduino 1.4.x (HID; library versions are ranges in platformio.ini) | small, bonds with LRU drop, passkey confirm callback |
 | Platform | espressif32 6.9.0 (Arduino core 2.0.17) | stable 2.x APIs (LEDC, RMT, sleep) |

@@ -26,7 +26,7 @@ Last updated: 2026-10-04, branch `rework/color-ui-emulator` (CI green: Linux, Wi
 | F. modules: Settings, WiFi, Bluetooth, IR, NFC, Games - every state of the 7 `-new` flows | done |
 | tests: 96/96 flow screens reached by scripts, 22/22 system events fired, unit tests, app-rule build checks | done |
 | G. `sim` exe: session server, terminal commands, window per the wireframe, shot / shot-ui | done |
-| H. ESP32-S3 PlatformIO target + drivers + CI job | **compiles; never run on hardware** |
+| H. ESP32-S3 PlatformIO target + drivers + CI job | **compiles (RAM 16.2 %, flash 19.8 % of the app partition); never run on hardware** |
 | I. ImGui window and `sim_headless` removed, CI Linux + Windows + ESP32, docs | done |
 
 ## Drivers (ESP32-S3)
