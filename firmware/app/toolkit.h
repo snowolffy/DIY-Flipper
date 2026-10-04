@@ -100,7 +100,8 @@ void carousel(Framebuffer& fb, int16_t boxY, int16_t boxH, int count, int sel,
               const std::vector<std::string>& labels, const std::vector<const char*>& icons);
 // Field box with the typed text and a '_' cursor; shows the end when the text is too long.
 void textField(Framebuffer& fb, const std::string& text, bool cursor = true);
-// Digit boxes: done ones gray with a dot, the current one white with `current`, later ones dark.
+// Digit boxes: done ones gray with a dot, the current one white with `current`, later ones dark;
+// current = 0: all empty dark boxes (the wrong-PIN page).
 void digitBoxes(Framebuffer& fb, int count, int done, char current, int16_t y = 48);
 
 // Wraps text into lines of at most maxChars, breaking at spaces.

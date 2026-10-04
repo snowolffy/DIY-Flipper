@@ -22,6 +22,10 @@ import json, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "sim", "scripts")
+# SHOTS=<folder>: also write a PNG of every screen the first time a walk reaches it (scripts go to <folder> too)
+SHOTS = os.environ.get("SHOTS", "")
+if SHOTS:
+    OUT = SHOTS
 FILE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
 PASS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.!@#$%^&*()"
 BTN = {"O": "OK", "C": "CANCEL", "L": "LEFT", "R": "RIGHT", "P": "POWER"}
@@ -36,6 +40,7 @@ HASHES = {"HASH_SETTINGS": "591d81816f1b8755", "HASH_SPLASH": "fcab818f92fa02f4"
 class Script:
     def __init__(self, t0=UNLOCKED_AT):
         self.t, self.ev, self.digit = t0, [], 0
+        self.shot = set()
 
     def add(self, e):
         e["t_ms"] = self.t
@@ -58,6 +63,9 @@ class Script:
                 self.t += int(s[1:])
             elif s[0] == "=":
                 self.add({"type": "assert", "check": "screen_equals", "value": s[1:]})
+                if SHOTS and s[1:] not in self.shot:  # first time on this screen: a picture for the gallery
+                    self.shot.add(s[1:])
+                    self.add({"type": "dump", "path": os.path.join(SHOTS, s[1:] + ".png")})
             elif s.startswith("ev:"):
                 self.add({"type": "assert", "check": "event_fired", "value": s[3:]})
             elif s.startswith("st:"):

@@ -221,7 +221,7 @@ std::unique_ptr<Screen> makeWrongPin(const char* code, const char* title, std::f
   (void)left;
   s->custom([title](App& app, ui::Framebuffer& fb) {
     ui::drawTextCentered(fb, theme::small(), 22, title, col::kWhite);
-    tk::digitBoxes(fb, std::strcmp(title, "EMERGENCY CODE") == 0 ? Security::kCodeLen : Security::kPinLen, 0, ' ');
+    tk::digitBoxes(fb, std::strcmp(title, "EMERGENCY CODE") == 0 ? Security::kCodeLen : Security::kPinLen, 0, 0);
     // the box drawn "current" is empty here: redraw it as an empty dark box
     ui::drawTextCentered(fb, theme::small(), 88, "WRONG PIN", col::kWhite);
     const int n = app.security().triesLeft();

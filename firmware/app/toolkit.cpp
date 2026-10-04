@@ -321,6 +321,8 @@ void digitBoxes(Framebuffer& fb, int count, int done, char current, int16_t y) {
     if (i < done) {
       fb.frameRect(x, y, bw, 16, col::kGray);
       fb.fillRect(centerIn(x, bw, 4), centerIn(y, 16, 4), 4, 4, col::kWhite);
+    } else if (current == 0) {  // no entry going on (wrong PIN page): every box empty and dark
+      fb.frameRect(x, y, bw, 16, col::kDark);
     } else if (i == done) {
       fb.frameRect(x, y, bw, 16, col::kWhite);
       const char s[2] = {current, 0};
