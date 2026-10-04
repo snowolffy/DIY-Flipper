@@ -316,7 +316,11 @@ json stateJson(Simulator& s) {
   j["ble"] = {{"state", bleStateName(s.ble().state())},
               {"host", s.ble().hostName()},
               {"passkey", s.ble().state() == hal::BleState::PairingRequest ? json(s.ble().passkey()) : json(nullptr)},
-              {"bonds", s.ble().bonds()},
+              {"bonds", [&] {
+                 json b = json::array();
+                 for (const auto& x : s.ble().bonds()) b.push_back(x.name);
+                 return b;
+               }()},
               {"keys_sent", s.ble().keysSent()},
               {"keys", keys}};
   j["theme"] = theme::activeName();

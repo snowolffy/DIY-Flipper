@@ -308,7 +308,7 @@ class MockBle : public hal::Ble {
   std::string hostName() const override { return state_ == hal::BleState::Off ? "" : host_; }
   uint32_t passkey() const override { return passkey_; }
   void confirmPairing(bool accept) override;
-  std::vector<std::string> bonds() const override { return bonded_; }
+  std::vector<hal::BleBond> bonds() const override;
   void forget(const std::string& host) override;
   bool sendKey(const hal::HidKey& key) override;
 

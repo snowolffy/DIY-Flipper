@@ -489,6 +489,19 @@ void MockBle::confirmPairing(bool accept) {
   }
 }
 
+std::vector<hal::BleBond> MockBle::bonds() const {
+  std::vector<hal::BleBond> out;
+  for (const std::string& n : bonded_) {
+    // a stable made-up address per name
+    uint32_t h = 2166136261u;
+    for (char c : n) h = (h ^ (uint8_t)c) * 16777619u;
+    char a[18];
+    std::snprintf(a, sizeof(a), "AA:BB:CC:%02X:%02X:%02X", (h >> 16) & 255, (h >> 8) & 255, h & 255);
+    out.push_back({n, a});
+  }
+  return out;
+}
+
 void MockBle::forget(const std::string& host) {
   bonded_.erase(std::remove(bonded_.begin(), bonded_.end(), host), bonded_.end());
   if (state_ == hal::BleState::Connected && host_ == host) disconnect();

@@ -148,7 +148,7 @@ void catalogList(Framebuffer& fb, const std::vector<Row>& rows, int sel, int fir
     if (!r.value.empty()) {
       std::string v = r.value;
       if (editing && on) v = "< " + v + " >";
-      right(fb, rx, (int16_t)(y + kRowTextDy), v, r.valueWhite && !r.disabled ? col::kWhite : c);
+      right(fb, rx, (int16_t)(y + kRowTextDy), v, r.disabled ? c : r.valueWhite ? col::kWhite : r.valueGray ? col::kGray : c);
       rx = (int16_t)(rx - textW(v) - 6);
     }
     int16_t lx = kRowTextX;
@@ -252,7 +252,7 @@ void popup(Framebuffer& fb, const std::vector<std::string>& items, int sel, int1
   const int16_t w = (int16_t)(maxLen * 6 + 24);
   const int16_t h = (int16_t)(items.size() * 14 + 4);
   const int16_t x = centerIn(0, kScreenW, w);
-  const int16_t y = cy ? (int16_t)(cy - h / 2) : centerIn(0, kScreenH, h);
+  const int16_t y = cy ? (int16_t)(cy - h / 2) : (int16_t)(centerIn(0, kScreenH, h) + 4);
   fb.fillRect(x, y, w, h, col::kBlack);
   fb.frameRect(x, y, w, h, col::kWhite);
   for (size_t i = 0; i < items.size(); i++) {

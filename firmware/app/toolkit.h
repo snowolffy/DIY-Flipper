@@ -44,6 +44,7 @@ struct Row {
   bool info = false;            // a status line that can't be selected (drawn gray, skipped by the cursor)
   bool disabled = false;        // drawn dark
   bool valueWhite = false;      // value stays white on unselected rows (settings values)
+  bool valueGray = false;       // value stays gray on the selected row (IR protocol)
 };
 // Marquee: labels that don't fit scroll on the selected row only. Offset in characters for time `ms` since
 // the row was selected.

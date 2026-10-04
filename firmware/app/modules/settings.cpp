@@ -361,7 +361,7 @@ void factoryReset(App& app, Scope s) {
   h.storage.remove(hal::Volume::Flash, Settings::kPath);
   if (s != Scope::SettingsOnly) {
     h.storage.remove(hal::Volume::Flash, "/wifi.ini");
-    for (const std::string& b : h.ble.bonds()) h.ble.forget(b);
+    for (const hal::BleBond& b : h.ble.bonds()) h.ble.forget(b.name);
     h.wifi.disconnect();
   }
   if (s == Scope::Everything) app.security().wipe();

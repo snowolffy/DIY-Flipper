@@ -191,6 +191,11 @@ struct HidKey {
   uint16_t usage = 0;
 };
 
+struct BleBond {
+  std::string name;
+  std::string address;  // "AA:BB:CC:11:22:33"
+};
+
 class Ble {
  public:
   virtual ~Ble() = default;
@@ -203,7 +208,7 @@ class Ble {
   // Accepting bonds the host; when the bond store is full the least recently used bond is dropped.
   virtual void confirmPairing(bool accept) = 0;
   // Bonded hosts, most recently used first.
-  virtual std::vector<std::string> bonds() const = 0;
+  virtual std::vector<BleBond> bonds() const = 0;
   // Removes a bond; forgetting the connected host disconnects it.
   virtual void forget(const std::string& host) = 0;
   // Press and release one key. False when no host is connected.
