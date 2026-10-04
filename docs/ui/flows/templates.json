@@ -1,0 +1,438 @@
+{
+  "format": "flipper-ui-templates/1",
+  "about": "Screen templates from Flipper UI Studio. Fixed 128x160 screen; zones are absolute integer pixel rectangles (x, y, w, h), drawn in list order (later = on top). No stretching or relative sizing.",
+  "screen": {
+    "w": 128,
+    "h": 160
+  },
+  "centering": "When centering leaves an odd pixel (an odd-width item in an even-width space, or the other way round), the item goes toward the left / top: pos = start + floor((span - size) / 2). The Studio's snapping uses the same rule.",
+  "roles": {
+    "status": "status bar; a template without one is full-screen",
+    "text": "text area; pad = inner padding",
+    "list": "repeating rows; rowH, iconSize, iconX/iconY = icon offset inside a row, textX = label x inside the zone, scrollbarW; visible rows = floor(h / rowH)",
+    "detail": "label/value rows; rowH, valueX = value column x inside the zone; rows = floor(h / rowH)",
+    "carousel": "single-row character picker; selW = width of the selection box, centered by the rule above, inset 2 px top and bottom",
+    "icon": "fixed icon slot",
+    "image": "fixed image slot",
+    "free": "guide region with no meaning"
+  },
+  "templates": [
+    {
+      "id": "tpl_full_new",
+      "name": "Full Screen-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "screen",
+          "name": "screen",
+          "role": "free",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 160
+        }
+      ]
+    },
+    {
+      "id": "canvas",
+      "name": "Canvas / Game",
+      "builtin": true,
+      "zones": [
+        {
+          "id": "canvas",
+          "name": "canvas 128×160",
+          "role": "free",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 160
+        }
+      ]
+    },
+    {
+      "id": "tpl_lock_new",
+      "name": "Lock Screen-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "battery",
+          "name": "battery",
+          "role": "free",
+          "x": 88,
+          "y": 0,
+          "w": 40,
+          "h": 11
+        },
+        {
+          "id": "clock",
+          "name": "clock",
+          "role": "text",
+          "x": 0,
+          "y": 26,
+          "w": 128,
+          "h": 26,
+          "pad": 0
+        },
+        {
+          "id": "message",
+          "name": "message",
+          "role": "text",
+          "x": 0,
+          "y": 64,
+          "w": 128,
+          "h": 12,
+          "pad": 0
+        },
+        {
+          "id": "lockicon",
+          "name": "lock icon",
+          "role": "icon",
+          "x": 56,
+          "y": 128,
+          "w": 16,
+          "h": 16
+        }
+      ]
+    },
+    {
+      "id": "tpl_digit_new",
+      "name": "Digit Entry-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 18,
+          "w": 128,
+          "h": 14,
+          "pad": 0
+        },
+        {
+          "id": "boxes",
+          "name": "digit boxes",
+          "role": "free",
+          "x": 0,
+          "y": 44,
+          "w": 128,
+          "h": 26
+        },
+        {
+          "id": "carousel",
+          "name": "digit carousel",
+          "role": "carousel",
+          "x": 0,
+          "y": 82,
+          "w": 128,
+          "h": 26,
+          "selW": 24
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    },
+    {
+      "id": "tpl_un8acw2",
+      "name": "Main menu",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "z_coq2qy1",
+          "name": "Menu",
+          "role": "free",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11
+        },
+        {
+          "id": "z_ei72bcn",
+          "name": "status 1",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 11
+        },
+        {
+          "id": "z_629s0jh",
+          "name": "gic/pic to show",
+          "role": "free",
+          "x": 0,
+          "y": 11,
+          "w": 128,
+          "h": 138
+        }
+      ]
+    },
+    {
+      "id": "tpl_launcher_new",
+      "name": "Launcher-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "status",
+          "name": "status",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 12
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 12,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        },
+        {
+          "id": "cards",
+          "name": "cards",
+          "role": "list",
+          "x": 0,
+          "y": 23,
+          "w": 128,
+          "h": 126,
+          "rowH": 29,
+          "iconSize": 12,
+          "iconX": 8,
+          "iconY": 7,
+          "textX": 25,
+          "scrollbarW": 2
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    },
+    {
+      "id": "tpl_list_new",
+      "name": "Catalog List-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "status",
+          "name": "status",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 12
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 12,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        },
+        {
+          "id": "list",
+          "name": "list rows",
+          "role": "list",
+          "x": 0,
+          "y": 23,
+          "w": 128,
+          "h": 126,
+          "rowH": 14,
+          "iconSize": 10,
+          "iconX": 4,
+          "iconY": 3,
+          "textX": 5,
+          "scrollbarW": 2
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    },
+    {
+      "id": "tpl_input_new",
+      "name": "Text Input-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "status",
+          "name": "status",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 12
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 12,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        },
+        {
+          "id": "field",
+          "name": "text field",
+          "role": "text",
+          "x": 6,
+          "y": 34,
+          "w": 116,
+          "h": 18,
+          "pad": 0
+        },
+        {
+          "id": "carousel",
+          "name": "character carousel",
+          "role": "carousel",
+          "x": 0,
+          "y": 74,
+          "w": 128,
+          "h": 26,
+          "selW": 24
+        },
+        {
+          "id": "hint",
+          "name": "hint",
+          "role": "text",
+          "x": 0,
+          "y": 110,
+          "w": 128,
+          "h": 12,
+          "pad": 0
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    },
+    {
+      "id": "tpl_message_new",
+      "name": "Message-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "status",
+          "name": "status",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 12
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 12,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        },
+        {
+          "id": "body",
+          "name": "body",
+          "role": "free",
+          "x": 0,
+          "y": 23,
+          "w": 128,
+          "h": 126
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    },
+    {
+      "id": "tpl_detail_new",
+      "name": "Detail-new",
+      "builtin": false,
+      "zones": [
+        {
+          "id": "status",
+          "name": "status",
+          "role": "status",
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 12
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "role": "text",
+          "x": 0,
+          "y": 12,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        },
+        {
+          "id": "rows",
+          "name": "rows",
+          "role": "detail",
+          "x": 0,
+          "y": 23,
+          "w": 128,
+          "h": 126,
+          "rowH": 14,
+          "valueX": 64
+        },
+        {
+          "id": "bottom",
+          "name": "bottom bar",
+          "role": "text",
+          "x": 0,
+          "y": 149,
+          "w": 128,
+          "h": 11,
+          "pad": 0
+        }
+      ]
+    }
+  ]
+}

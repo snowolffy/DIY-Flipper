@@ -147,8 +147,8 @@ ImportResult importAsset(const fs::path& file, MockStorage& st) {
   const std::string ext = lower(file.extension().string());
   if (ext == ".zip") return importTheme(file, st);
 
-  if (ext != ".b1i" && ext != ".b1f") {
-    r.error = "unsupported file type '" + ext + "' - import a .b1i, .b1f or theme .zip";
+  if (ext != ".c16" && ext != ".b1i" && ext != ".b1f") {
+    r.error = "unsupported file type '" + ext + "' - import a .c16, .b1i, .b1f or theme .zip";
     return r;
   }
   std::string bytes;
@@ -158,9 +158,9 @@ ImportResult importAsset(const fs::path& file, MockStorage& st) {
   }
   std::string err;
   std::string dest;
-  if (ext == ".b1i") {
+  if (ext == ".c16" || ext == ".b1i") {
     theme::Image img;
-    if (!theme::parseB1i(bytes, img, err)) {
+    if (!theme::parseImage(bytes, img, err)) {
       r.error = err;
       return r;
     }

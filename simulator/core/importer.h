@@ -2,7 +2,7 @@
 // the firmware looks for it on the real device.
 //
 //   theme .zip  ->  sd:/system/theme/<name>/...   (every folder in the zip that holds a theme.ini)
-//   .b1i        ->  sd:/media/<file>
+//   .c16 / .b1i ->  sd:/media/<file>
 //   .b1f        ->  sd:/system/fonts/<file>
 //
 // Files are written straight into the storage folder, the way you'd copy them onto the card from a PC,

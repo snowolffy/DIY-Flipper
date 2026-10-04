@@ -1,0 +1,6340 @@
+{
+  "format": "flipper-ui-flow/2",
+  "schema": {
+    "about": "A UI flow of the DIY Flipper (128x160 screen) as a state machine. states = screens and internal decisions; transitions = what moves from one state to another. Import accepts this file back (Flows > Import). x / y are optional: states without them are laid out on a grid.",
+    "state": {
+      "id": "unique string",
+      "kind": "screen | internal (a firmware decision, no screen)",
+      "title": "string",
+      "note": "string",
+      "inputMode": "screens: normal | list | text (how the firmware treats the buttons on that screen)",
+      "start": "true on the one state the flow starts at",
+      "end": "true on a screen that is meant to have no way out",
+      "mockup": "screens: { id, name, file, template } of the linked asset (export only; import uses mockup.id)",
+      "x": "number, optional",
+      "y": "number, optional"
+    },
+    "transition": {
+      "id": "unique string",
+      "from": "state id",
+      "to": "state id",
+      "name": "free text label (event = same, for older readers)",
+      "note": "string",
+      "trigger": "null, or { type: 'button', held: null|button, button, gesture } | { type: 'timer', ms } | { type: 'system', event: systemEvents[].id }",
+      "transition": "{ type: cut | slide | push | fade, dir: left|right|up|down (slide/push: where things move), ms, easing: linear|ease-in|ease-out|ease-in-out }"
+    },
+    "buttons": "ok, cancel, left (<), right (>), power. There is no D-pad, no up/down, no touch.",
+    "gestures": "tap: on press, or on release (before hold_ms) when the same button also has a hold/repeat transition on that screen; hold: once at hold_ms; repeat: at hold_ms, then again faster and faster; release: on release, any duration. held: that button must already be down; when such a combo fires, the held button's own tap/release is skipped.",
+    "input": {
+      "hold_ms": 500,
+      "repeat_start_interval_ms": 200,
+      "repeat_accel": 0.8,
+      "repeat_min_interval_ms": 40,
+      "normal": "hold OK + < / > scrolls up / down",
+      "list": "< / > move the selection up / down (no need to hold OK); hold Cancel on a list item deletes it",
+      "text": "hold OK switches upper / lower case; hold Cancel cancels the input"
+    }
+  },
+  "generated": "2026-10-04T06:55:43.013Z",
+  "source": "DIY Flipper Flow Designer (Flipper UI Studio)",
+  "systemEvents": [
+    {
+      "id": "nfc_card_found",
+      "name": "NFC card found"
+    },
+    {
+      "id": "sd_removed",
+      "name": "SD card removed"
+    },
+    {
+      "id": "sd_inserted",
+      "name": "SD card inserted"
+    },
+    {
+      "id": "battery_low",
+      "name": "Low battery"
+    },
+    {
+      "id": "battery_critical",
+      "name": "Battery critical"
+    },
+    {
+      "id": "ir_received",
+      "name": "IR signal received"
+    },
+    {
+      "id": "wifi_connected",
+      "name": "WiFi connected"
+    },
+    {
+      "id": "wifi_lost",
+      "name": "WiFi lost"
+    },
+    {
+      "id": "ble_connected",
+      "name": "BLE connected"
+    },
+    {
+      "id": "ble_disconnected",
+      "name": "BLE disconnected"
+    },
+    {
+      "id": "boot_done",
+      "name": "Boot checks done"
+    },
+    {
+      "id": "lockout_over",
+      "name": "Lockout over"
+    },
+    {
+      "id": "ir_learn_timeout",
+      "name": "IR learn timeout"
+    },
+    {
+      "id": "nfc_read_done",
+      "name": "NFC read done"
+    },
+    {
+      "id": "nfc_card_lost",
+      "name": "NFC card lost"
+    },
+    {
+      "id": "nfc_write_done",
+      "name": "NFC write done"
+    },
+    {
+      "id": "wifi_scan_done",
+      "name": "WiFi scan done"
+    },
+    {
+      "id": "wifi_connect_failed",
+      "name": "WiFi connect failed"
+    },
+    {
+      "id": "ble_pair_request",
+      "name": "BLE pair request"
+    },
+    {
+      "id": "pack_loaded",
+      "name": "Game pack loaded"
+    },
+    {
+      "id": "pack_failed",
+      "name": "Game pack failed"
+    },
+    {
+      "id": "app_failsafe",
+      "name": "App failsafe exit (Cancel held 3 s)"
+    }
+  ],
+  "diagrams": [
+    {
+      "name": "Main-new",
+      "states": [
+        {
+          "id": "n_M1",
+          "kind": "screen",
+          "title": "Boot status (POST)",
+          "note": "Self-check like an old PC POST. Ignores buttons except the emergency entry.",
+          "inputMode": "normal",
+          "start": true,
+          "mockup": {
+            "id": "pic69",
+            "name": "Main M1 Boot Status-new",
+            "file": "screens/main-m1-boot-status-new_pic69.png",
+            "missing": false,
+            "template": "tpl_full_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_M2",
+          "kind": "screen",
+          "title": "Boot logo + loading",
+          "note": "Shown 1-5 s on purpose (real boot is fast). Earlier note: fade to black before the next screen.",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic18",
+            "name": "Boot Load",
+            "file": "screens/boot-load_pic18.png",
+            "missing": false,
+            "template": "canvas"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "q_pinset",
+          "kind": "internal",
+          "title": "PIN set?",
+          "note": "",
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_M3a",
+          "kind": "screen",
+          "title": "Lock screen (no PIN)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic70",
+            "name": "Main M3a Lock Screen-new",
+            "file": "screens/main-m3a-lock-screen-new_pic70.png",
+            "missing": false,
+            "template": "tpl_lock_new"
+          },
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_M3b",
+          "kind": "screen",
+          "title": "Lock screen (PIN)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic71",
+            "name": "Main M3b Lock Screen PIN-new",
+            "file": "screens/main-m3b-lock-screen-pin-new_pic71.png",
+            "missing": false,
+            "template": "tpl_lock_new"
+          },
+          "x": 760,
+          "y": 160
+        },
+        {
+          "id": "n_M4a",
+          "kind": "screen",
+          "title": "Enter PIN",
+          "note": "< > turn the digit, OK confirms a digit, Cancel deletes. 6 digits, checked automatically.",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic72",
+            "name": "Main M4a PIN Entry-new",
+            "file": "screens/main-m4a-pin-entry-new_pic72.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 1000,
+          "y": 40
+        },
+        {
+          "id": "q_pinok",
+          "kind": "internal",
+          "title": "PIN correct?",
+          "note": "3 wrong tries -> lockout (time stacks, numbers TBD)",
+          "x": 1240,
+          "y": 40
+        },
+        {
+          "id": "n_M4b",
+          "kind": "screen",
+          "title": "Wrong PIN",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic73",
+            "name": "Main M4b PIN Wrong-new",
+            "file": "screens/main-m4b-pin-wrong-new_pic73.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 1480,
+          "y": 40
+        },
+        {
+          "id": "n_M4c",
+          "kind": "screen",
+          "title": "Locked out",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic74",
+            "name": "Main M4c Locked Out-new",
+            "file": "screens/main-m4c-locked-out-new_pic74.png",
+            "missing": false,
+            "template": "tpl_full_new"
+          },
+          "x": 1000,
+          "y": 160
+        },
+        {
+          "id": "n_M5",
+          "kind": "screen",
+          "title": "Home Screen",
+          "note": "Only Cancel does something here.",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic22",
+            "name": "Main menu mini",
+            "file": "screens/main-menu-mini_pic22.png",
+            "missing": false,
+            "template": "tpl_un8acw2"
+          },
+          "x": 1000,
+          "y": 280
+        },
+        {
+          "id": "n_M6a",
+          "kind": "screen",
+          "title": "Launcher",
+          "note": "Long names use marquee when selected.",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 1240,
+          "y": 160
+        },
+        {
+          "id": "n_M6b",
+          "kind": "screen",
+          "title": "Launcher (scrolled to end)",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic76",
+            "name": "Main M6b Launcher Scrolled-new",
+            "file": "screens/main-m6b-launcher-scrolled-new_pic76.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 1480,
+          "y": 160
+        },
+        {
+          "id": "q_openmod",
+          "kind": "internal",
+          "title": "Open selected module",
+          "note": "Continues in that module's flow: IR-new, NFC-new, Games-new, WiFi-new, Bluetooth-new, Settings-new",
+          "x": 1480,
+          "y": 280
+        },
+        {
+          "id": "n_M7a",
+          "kind": "screen",
+          "title": "Emergency menu",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic77",
+            "name": "Main M7a Emergency Menu-new",
+            "file": "screens/main-m7a-emergency-menu-new_pic77.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_M7b",
+          "kind": "screen",
+          "title": "Emergency code (8 digits)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic78",
+            "name": "Main M7b Emergency Code-new",
+            "file": "screens/main-m7b-emergency-code-new_pic78.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "q_codeok",
+          "kind": "internal",
+          "title": "Emergency code correct?",
+          "note": "Wrong tries count together with the Lock screen counter",
+          "x": 760,
+          "y": 280
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_main_new_1",
+          "from": "n_M1",
+          "to": "n_M2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "boot_done"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_2",
+          "from": "n_M1",
+          "to": "n_M7a",
+          "name": "Emergency entry",
+          "event": "Emergency entry",
+          "note": "Or a special button combo (not decided yet)",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "power",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_3",
+          "from": "n_M2",
+          "to": "q_pinset",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 3000
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 400,
+            "easing": "ease-in-out"
+          }
+        },
+        {
+          "id": "e_flow_main_new_4",
+          "from": "q_pinset",
+          "to": "n_M3b",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_5",
+          "from": "q_pinset",
+          "to": "n_M3a",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_6",
+          "from": "n_M3a",
+          "to": "n_M5",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_main_new_7",
+          "from": "n_M3b",
+          "to": "n_M4a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_8",
+          "from": "n_M4a",
+          "to": "q_pinok",
+          "name": "OK on the 6th digit",
+          "event": "OK on the 6th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_9",
+          "from": "n_M4a",
+          "to": "n_M3b",
+          "name": "Cancel hold: back",
+          "event": "Cancel hold: back",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_10",
+          "from": "q_pinok",
+          "to": "n_M5",
+          "name": "correct",
+          "event": "correct",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_main_new_11",
+          "from": "q_pinok",
+          "to": "n_M4b",
+          "name": "wrong, tries left",
+          "event": "wrong, tries left",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_12",
+          "from": "q_pinok",
+          "to": "n_M4c",
+          "name": "wrong, no tries left",
+          "event": "wrong, no tries left",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_13",
+          "from": "n_M4b",
+          "to": "n_M4a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 1500
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_14",
+          "from": "n_M4c",
+          "to": "n_M3b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "lockout_over"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_15",
+          "from": "n_M5",
+          "to": "n_M6a",
+          "name": "Menu tab slides up",
+          "event": "Menu tab slides up",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "slide",
+            "ms": 250,
+            "easing": "ease-out",
+            "dir": "up"
+          }
+        },
+        {
+          "id": "e_flow_main_new_16",
+          "from": "n_M6a",
+          "to": "n_M5",
+          "name": "Menu tab slides down",
+          "event": "Menu tab slides down",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "slide",
+            "ms": 250,
+            "easing": "ease-out",
+            "dir": "down"
+          }
+        },
+        {
+          "id": "e_flow_main_new_17",
+          "from": "n_M6a",
+          "to": "n_M6b",
+          "name": "scroll with < > (built-in list nav)",
+          "event": "scroll with < > (built-in list nav)",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_18",
+          "from": "n_M6b",
+          "to": "n_M5",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "slide",
+            "ms": 250,
+            "easing": "ease-out",
+            "dir": "down"
+          }
+        },
+        {
+          "id": "e_flow_main_new_19",
+          "from": "n_M6a",
+          "to": "q_openmod",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_20",
+          "from": "n_M6b",
+          "to": "q_openmod",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_21",
+          "from": "n_M7a",
+          "to": "n_M7b",
+          "name": "Reset PIN",
+          "event": "Reset PIN",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_22",
+          "from": "n_M7a",
+          "to": "n_M2",
+          "name": "Leave: continue booting",
+          "event": "Leave: continue booting",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_23",
+          "from": "n_M7b",
+          "to": "q_codeok",
+          "name": "OK on the 8th digit",
+          "event": "OK on the 8th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_24",
+          "from": "n_M7b",
+          "to": "n_M7a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_25",
+          "from": "q_codeok",
+          "to": "n_M2",
+          "name": "correct: PIN removed, continue boot",
+          "event": "correct: PIN removed, continue boot",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_26",
+          "from": "q_codeok",
+          "to": "n_M7b",
+          "name": "wrong",
+          "event": "wrong",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_main_new_27",
+          "from": "q_codeok",
+          "to": "n_M4c",
+          "name": "too many wrong",
+          "event": "too many wrong",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IR-new",
+      "states": [
+        {
+          "id": "n_I0",
+          "kind": "screen",
+          "title": "IR Menu",
+          "note": "",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic40",
+            "name": "IR I0 IR Menu-new",
+            "file": "screens/ir-i0-ir-menu-new_pic40.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "q_anycat",
+          "kind": "internal",
+          "title": "Any categories?",
+          "note": "",
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_S1",
+          "kind": "screen",
+          "title": "Send: categories",
+          "note": "Cancel hold opens the category menu (rename/delete).",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic41",
+            "name": "IR S1 Send Categories-new",
+            "file": "screens/ir-s1-send-categories-new_pic41.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_S1_0",
+          "kind": "screen",
+          "title": "Send: no categories",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic42",
+            "name": "IR S1-0 Send Categories Empty-new",
+            "file": "screens/ir-s1-0-send-categories-empty-new_pic42.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_S1a",
+          "kind": "screen",
+          "title": "Category menu",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic43",
+            "name": "IR S1a Category Menu-new",
+            "file": "screens/ir-s1a-category-menu-new_pic43.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_S1b",
+          "kind": "screen",
+          "title": "Rename category",
+          "note": "Name already exists -> message, keep editing",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic44",
+            "name": "IR S1b Rename Category-new",
+            "file": "screens/ir-s1b-rename-category-new_pic44.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 1000,
+          "y": 40
+        },
+        {
+          "id": "n_S1c",
+          "kind": "screen",
+          "title": "Delete category?",
+          "note": "Deletes every signal inside too; empty category shows \"Delete <name>?\"",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic45",
+            "name": "IR S1c Delete Category-new",
+            "file": "screens/ir-s1c-delete-category-new_pic45.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1000,
+          "y": 160
+        },
+        {
+          "id": "q_anysig",
+          "kind": "internal",
+          "title": "Category has signals?",
+          "note": "",
+          "x": 760,
+          "y": 160
+        },
+        {
+          "id": "n_S2",
+          "kind": "screen",
+          "title": "Send: signals",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic46",
+            "name": "IR S2 Send Signals-new",
+            "file": "screens/ir-s2-send-signals-new_pic46.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1000,
+          "y": 280
+        },
+        {
+          "id": "n_S2_0",
+          "kind": "screen",
+          "title": "Signals: empty",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic47",
+            "name": "IR S2-0 Signals Empty-new",
+            "file": "screens/ir-s2-0-signals-empty-new_pic47.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1000,
+          "y": 400
+        },
+        {
+          "id": "n_S2t",
+          "kind": "screen",
+          "title": "Signal sent",
+          "note": "Toast + confirm beep, stays on the list",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic48",
+            "name": "IR S2t Signal Sent-new",
+            "file": "screens/ir-s2t-signal-sent-new_pic48.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1240,
+          "y": 40
+        },
+        {
+          "id": "n_S3",
+          "kind": "screen",
+          "title": "Delete signal?",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic49",
+            "name": "IR S3 Delete Signal-new",
+            "file": "screens/ir-s3-delete-signal-new_pic49.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1240,
+          "y": 160
+        },
+        {
+          "id": "n_L1",
+          "kind": "screen",
+          "title": "Learn: waiting",
+          "note": "RMT RX on only while here; timeout ~15 s",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic50",
+            "name": "IR L1 Learn Waiting-new",
+            "file": "screens/ir-l1-learn-waiting-new_pic50.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "q_decoded",
+          "kind": "internal",
+          "title": "Protocol decoded?",
+          "note": "",
+          "x": 520,
+          "y": 280
+        },
+        {
+          "id": "n_L1b",
+          "kind": "screen",
+          "title": "Learn: no signal",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic51",
+            "name": "IR L1b Learn No Signal-new",
+            "file": "screens/ir-l1b-learn-no-signal-new_pic51.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 520,
+          "y": 400
+        },
+        {
+          "id": "n_L2a",
+          "kind": "screen",
+          "title": "Captured (decoded)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic52",
+            "name": "IR L2a Captured Decoded-new",
+            "file": "screens/ir-l2a-captured-decoded-new_pic52.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 760,
+          "y": 280
+        },
+        {
+          "id": "n_L2b",
+          "kind": "screen",
+          "title": "Captured (RAW)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic53",
+            "name": "IR L2b Captured Raw-new",
+            "file": "screens/ir-l2b-captured-raw-new_pic53.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 760,
+          "y": 400
+        },
+        {
+          "id": "n_L3",
+          "kind": "screen",
+          "title": "Name the signal",
+          "note": "",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic54",
+            "name": "IR L3 Name Signal-new",
+            "file": "screens/ir-l3-name-signal-new_pic54.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 1000,
+          "y": 520
+        },
+        {
+          "id": "n_L4",
+          "kind": "screen",
+          "title": "Pick category",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic55",
+            "name": "IR L4 Pick Category-new",
+            "file": "screens/ir-l4-pick-category-new_pic55.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1240,
+          "y": 280
+        },
+        {
+          "id": "n_L4n",
+          "kind": "screen",
+          "title": "New category name",
+          "note": "",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic141",
+            "name": "Tpl TP1 Text Input-new",
+            "file": "screens/tpl-tp1-text-input-new_pic141.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 1480,
+          "y": 40
+        },
+        {
+          "id": "n_L5",
+          "kind": "screen",
+          "title": "Saved",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic56",
+            "name": "IR L5 Saved-new",
+            "file": "screens/ir-l5-saved-new_pic56.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 1480,
+          "y": 160
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_ir_new_1",
+          "from": "n_I0",
+          "to": "q_anycat",
+          "name": "Send",
+          "event": "Send",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_2",
+          "from": "n_I0",
+          "to": "n_L1",
+          "name": "Learn",
+          "event": "Learn",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_3",
+          "from": "n_I0",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_4",
+          "from": "q_anycat",
+          "to": "n_S1",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_5",
+          "from": "q_anycat",
+          "to": "n_S1_0",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_6",
+          "from": "n_S1_0",
+          "to": "n_I0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_7",
+          "from": "n_S1",
+          "to": "q_anysig",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_8",
+          "from": "n_S1",
+          "to": "n_I0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_9",
+          "from": "n_S1",
+          "to": "n_S1a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_10",
+          "from": "n_S1a",
+          "to": "n_S1b",
+          "name": "Rename",
+          "event": "Rename",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_11",
+          "from": "n_S1a",
+          "to": "n_S1c",
+          "name": "Delete",
+          "event": "Delete",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_12",
+          "from": "n_S1a",
+          "to": "n_S1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_13",
+          "from": "n_S1b",
+          "to": "n_S1",
+          "name": "OK on the check slot: save",
+          "event": "OK on the check slot: save",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_14",
+          "from": "n_S1b",
+          "to": "n_S1",
+          "name": "cancel rename",
+          "event": "cancel rename",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_15",
+          "from": "n_S1c",
+          "to": "n_S1",
+          "name": "deleted",
+          "event": "deleted",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_16",
+          "from": "n_S1c",
+          "to": "n_S1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_17",
+          "from": "q_anysig",
+          "to": "n_S2",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_18",
+          "from": "q_anysig",
+          "to": "n_S2_0",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_19",
+          "from": "n_S2_0",
+          "to": "n_S1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_20",
+          "from": "n_S2",
+          "to": "n_S2t",
+          "name": "send now",
+          "event": "send now",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_21",
+          "from": "n_S2",
+          "to": "n_S1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_22",
+          "from": "n_S2",
+          "to": "n_S3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_23",
+          "from": "n_S2t",
+          "to": "n_S2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 1000
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_24",
+          "from": "n_S3",
+          "to": "n_S2",
+          "name": "deleted",
+          "event": "deleted",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_25",
+          "from": "n_S3",
+          "to": "n_S2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_26",
+          "from": "n_L1",
+          "to": "q_decoded",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ir_received"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_27",
+          "from": "n_L1",
+          "to": "n_L1b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ir_learn_timeout"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_28",
+          "from": "n_L1",
+          "to": "n_I0",
+          "name": "RX off",
+          "event": "RX off",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_29",
+          "from": "q_decoded",
+          "to": "n_L2a",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_30",
+          "from": "q_decoded",
+          "to": "n_L2b",
+          "name": "no (RAW)",
+          "event": "no (RAW)",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_31",
+          "from": "n_L1b",
+          "to": "n_L1",
+          "name": "retry",
+          "event": "retry",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_32",
+          "from": "n_L1b",
+          "to": "n_I0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_33",
+          "from": "n_L2a",
+          "to": "n_L3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_34",
+          "from": "n_L2a",
+          "to": "n_L1",
+          "name": "discard",
+          "event": "discard",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_35",
+          "from": "n_L2b",
+          "to": "n_L3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_36",
+          "from": "n_L2b",
+          "to": "n_L1",
+          "name": "discard",
+          "event": "discard",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_37",
+          "from": "n_L3",
+          "to": "n_L4",
+          "name": "OK on the check slot",
+          "event": "OK on the check slot",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_38",
+          "from": "n_L3",
+          "to": "n_L1",
+          "name": "cancel: discard signal",
+          "event": "cancel: discard signal",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_39",
+          "from": "n_L4",
+          "to": "n_L5",
+          "name": "existing category",
+          "event": "existing category",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_40",
+          "from": "n_L4",
+          "to": "n_L4n",
+          "name": "New category",
+          "event": "New category",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_41",
+          "from": "n_L4",
+          "to": "n_L3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_42",
+          "from": "n_L4n",
+          "to": "n_L5",
+          "name": "OK on the check slot",
+          "event": "OK on the check slot",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_43",
+          "from": "n_L4n",
+          "to": "n_L4",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_ir_new_44",
+          "from": "n_L5",
+          "to": "n_L1",
+          "name": "learn the next button",
+          "event": "learn the next button",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 1200
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NFC-new",
+      "states": [
+        {
+          "id": "n_N0",
+          "kind": "screen",
+          "title": "NFC Menu",
+          "note": "PN532 starts here; no answer -> \"NFC module not found\"",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic79",
+            "name": "NFC N0 NFC Menu-new",
+            "file": "screens/nfc-n0-nfc-menu-new_pic79.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "n_R1",
+          "kind": "screen",
+          "title": "Read: place card",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic80",
+            "name": "NFC R1 Read Waiting-new",
+            "file": "screens/nfc-r1-read-waiting-new_pic80.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_R2",
+          "kind": "screen",
+          "title": "Reading",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic81",
+            "name": "NFC R2 Reading-new",
+            "file": "screens/nfc-r2-reading-new_pic81.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_R3",
+          "kind": "screen",
+          "title": "Read result",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic82",
+            "name": "NFC R3 Read Result-new",
+            "file": "screens/nfc-r3-read-result-new_pic82.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_R4",
+          "kind": "screen",
+          "title": "Name the dump",
+          "note": "",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic141",
+            "name": "Tpl TP1 Text Input-new",
+            "file": "screens/tpl-tp1-text-input-new_pic141.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 1000,
+          "y": 40
+        },
+        {
+          "id": "n_R5",
+          "kind": "screen",
+          "title": "Saved",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic56",
+            "name": "IR L5 Saved-new",
+            "file": "screens/ir-l5-saved-new_pic56.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 1240,
+          "y": 40
+        },
+        {
+          "id": "n_W1",
+          "kind": "screen",
+          "title": "Write: pick dump",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic83",
+            "name": "NFC W1 Write Pick Dump-new",
+            "file": "screens/nfc-w1-write-pick-dump-new_pic83.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "n_W2",
+          "kind": "screen",
+          "title": "Write: confirm",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic84",
+            "name": "NFC W2 Write Confirm-new",
+            "file": "screens/nfc-w2-write-confirm-new_pic84.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_W3",
+          "kind": "screen",
+          "title": "Write: place card",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic85",
+            "name": "NFC W3 Write Waiting-new",
+            "file": "screens/nfc-w3-write-waiting-new_pic85.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 760,
+          "y": 160
+        },
+        {
+          "id": "q_typeok",
+          "kind": "internal",
+          "title": "Card type matches?",
+          "note": "",
+          "x": 1000,
+          "y": 160
+        },
+        {
+          "id": "n_W4",
+          "kind": "screen",
+          "title": "Writing",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic86",
+            "name": "NFC W4 Writing-new",
+            "file": "screens/nfc-w4-writing-new_pic86.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 1240,
+          "y": 160
+        },
+        {
+          "id": "n_W5a",
+          "kind": "screen",
+          "title": "Write done",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic87",
+            "name": "NFC W5a Write Done-new",
+            "file": "screens/nfc-w5a-write-done-new_pic87.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 1480,
+          "y": 40
+        },
+        {
+          "id": "n_W5b",
+          "kind": "screen",
+          "title": "Type mismatch",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic88",
+            "name": "NFC W5b Write Type Mismatch-new",
+            "file": "screens/nfc-w5b-write-type-mismatch-new_pic88.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 1240,
+          "y": 280
+        },
+        {
+          "id": "n_E1",
+          "kind": "screen",
+          "title": "Emulate: pick dump",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic89",
+            "name": "NFC E1 Emulate Pick Dump-new",
+            "file": "screens/nfc-e1-emulate-pick-dump-new_pic89.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 400
+        },
+        {
+          "id": "q_emul",
+          "kind": "internal",
+          "title": "Dump emulatable?",
+          "note": "",
+          "x": 520,
+          "y": 280
+        },
+        {
+          "id": "n_E1p",
+          "kind": "screen",
+          "title": "Cannot emulate",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic90",
+            "name": "NFC E1p Cannot Emulate-new",
+            "file": "screens/nfc-e1p-cannot-emulate-new_pic90.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 760,
+          "y": 280
+        },
+        {
+          "id": "n_E2",
+          "kind": "screen",
+          "title": "Emulating",
+          "note": "Idle sleep paused while emulating",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic91",
+            "name": "NFC E2 Emulating-new",
+            "file": "screens/nfc-e2-emulating-new_pic91.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 760,
+          "y": 400
+        },
+        {
+          "id": "n_D1",
+          "kind": "screen",
+          "title": "Saved Dumps",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic92",
+            "name": "NFC D1 Saved Dumps-new",
+            "file": "screens/nfc-d1-saved-dumps-new_pic92.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 520
+        },
+        {
+          "id": "n_D1d",
+          "kind": "screen",
+          "title": "Delete dump?",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic93",
+            "name": "NFC D1d Delete Dump-new",
+            "file": "screens/nfc-d1d-delete-dump-new_pic93.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 400
+        },
+        {
+          "id": "n_D2",
+          "kind": "screen",
+          "title": "Dump detail",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic94",
+            "name": "NFC D2 Dump Detail-new",
+            "file": "screens/nfc-d2-dump-detail-new_pic94.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 520,
+          "y": 520
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_nfc_new_1",
+          "from": "n_N0",
+          "to": "n_R1",
+          "name": "Read Card",
+          "event": "Read Card",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_2",
+          "from": "n_N0",
+          "to": "n_W1",
+          "name": "Write Card",
+          "event": "Write Card",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_3",
+          "from": "n_N0",
+          "to": "n_E1",
+          "name": "Emulate Card",
+          "event": "Emulate Card",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_4",
+          "from": "n_N0",
+          "to": "n_D1",
+          "name": "Saved Dumps",
+          "event": "Saved Dumps",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_5",
+          "from": "n_N0",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_6",
+          "from": "n_R1",
+          "to": "n_R2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "nfc_card_found"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_7",
+          "from": "n_R1",
+          "to": "n_N0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_8",
+          "from": "n_R2",
+          "to": "n_R3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "nfc_read_done"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_9",
+          "from": "n_R2",
+          "to": "n_R1",
+          "name": "card lost: try again",
+          "event": "card lost: try again",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "nfc_card_lost"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_10",
+          "from": "n_R2",
+          "to": "n_R1",
+          "name": "stop",
+          "event": "stop",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_11",
+          "from": "n_R3",
+          "to": "n_R4",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_12",
+          "from": "n_R3",
+          "to": "n_R1",
+          "name": "discard",
+          "event": "discard",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_13",
+          "from": "n_R4",
+          "to": "n_R5",
+          "name": "OK on the check slot",
+          "event": "OK on the check slot",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_14",
+          "from": "n_R4",
+          "to": "n_R3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_15",
+          "from": "n_R5",
+          "to": "n_R1",
+          "name": "read the next card",
+          "event": "read the next card",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 1200
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_16",
+          "from": "n_W1",
+          "to": "n_W2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_17",
+          "from": "n_W1",
+          "to": "n_N0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_18",
+          "from": "n_W2",
+          "to": "n_W3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_19",
+          "from": "n_W2",
+          "to": "n_W1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_20",
+          "from": "n_W3",
+          "to": "q_typeok",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "nfc_card_found"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_21",
+          "from": "n_W3",
+          "to": "n_W1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_22",
+          "from": "q_typeok",
+          "to": "n_W4",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_23",
+          "from": "q_typeok",
+          "to": "n_W5b",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_24",
+          "from": "n_W4",
+          "to": "n_W5a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "nfc_write_done"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_25",
+          "from": "n_W4",
+          "to": "n_W5a",
+          "name": "stop (shows sectors written)",
+          "event": "stop (shows sectors written)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_26",
+          "from": "n_W5a",
+          "to": "n_W1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_27",
+          "from": "n_W5b",
+          "to": "n_W1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_28",
+          "from": "n_E1",
+          "to": "q_emul",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_29",
+          "from": "n_E1",
+          "to": "n_N0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_30",
+          "from": "q_emul",
+          "to": "n_E2",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_31",
+          "from": "q_emul",
+          "to": "n_E1p",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_32",
+          "from": "n_E1p",
+          "to": "n_E1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_33",
+          "from": "n_E2",
+          "to": "n_E1",
+          "name": "stop",
+          "event": "stop",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_34",
+          "from": "n_D1",
+          "to": "n_D2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_35",
+          "from": "n_D1",
+          "to": "n_N0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_36",
+          "from": "n_D1",
+          "to": "n_D1d",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_37",
+          "from": "n_D1d",
+          "to": "n_D1",
+          "name": "deleted",
+          "event": "deleted",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_38",
+          "from": "n_D1d",
+          "to": "n_D1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_nfc_new_39",
+          "from": "n_D2",
+          "to": "n_D1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WiFi-new",
+      "states": [
+        {
+          "id": "n_F0",
+          "kind": "screen",
+          "title": "WiFi Menu",
+          "note": "Disconnect row only while connected. WiFi never connects at boot or drops on leaving.",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic95",
+            "name": "WiFi F0 WiFi Menu-new",
+            "file": "screens/wifi-f0-wifi-menu-new_pic95.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "n_C1",
+          "kind": "screen",
+          "title": "Scanning",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic96",
+            "name": "WiFi C1 Scanning-new",
+            "file": "screens/wifi-c1-scanning-new_pic96.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_C2",
+          "kind": "screen",
+          "title": "Networks",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic97",
+            "name": "WiFi C2 Networks-new",
+            "file": "screens/wifi-c2-networks-new_pic97.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "q_known",
+          "kind": "internal",
+          "title": "Saved or open network?",
+          "note": "",
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_C4",
+          "kind": "screen",
+          "title": "Password",
+          "note": "Starts empty. Hold OK switches case.",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic98",
+            "name": "WiFi C4 Password-new",
+            "file": "screens/wifi-c4-password-new_pic98.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 1000,
+          "y": 40
+        },
+        {
+          "id": "n_C5",
+          "kind": "screen",
+          "title": "Connecting",
+          "note": "Timeout ~15 s",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic99",
+            "name": "WiFi C5 Connecting-new",
+            "file": "screens/wifi-c5-connecting-new_pic99.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_C6a",
+          "kind": "screen",
+          "title": "Connected",
+          "note": "Saves the password now; NTP sync writes time to the DS3231",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic100",
+            "name": "WiFi C6a Connected-new",
+            "file": "screens/wifi-c6a-connected-new_pic100.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 760,
+          "y": 160
+        },
+        {
+          "id": "n_C6b",
+          "kind": "screen",
+          "title": "Connect failed",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic101",
+            "name": "WiFi C6b Connect Failed-new",
+            "file": "screens/wifi-c6b-connect-failed-new_pic101.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 760,
+          "y": 280
+        },
+        {
+          "id": "n_N1",
+          "kind": "screen",
+          "title": "Saved Networks",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic102",
+            "name": "WiFi N1 Saved Networks-new",
+            "file": "screens/wifi-n1-saved-networks-new_pic102.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "n_N1d",
+          "kind": "screen",
+          "title": "Forget network?",
+          "note": "Does not drop the current connection",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic103",
+            "name": "WiFi N1d Forget Network-new",
+            "file": "screens/wifi-n1d-forget-network-new_pic103.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 280
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_wifi_new_1",
+          "from": "n_F0",
+          "to": "n_C1",
+          "name": "Connect",
+          "event": "Connect",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_2",
+          "from": "n_F0",
+          "to": "n_N1",
+          "name": "Saved Networks",
+          "event": "Saved Networks",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_3",
+          "from": "n_F0",
+          "to": "n_F0",
+          "name": "Disconnect (drops at once, toast)",
+          "event": "Disconnect (drops at once, toast)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_4",
+          "from": "n_F0",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_5",
+          "from": "n_C1",
+          "to": "n_C2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "wifi_scan_done"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_6",
+          "from": "n_C1",
+          "to": "n_F0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_7",
+          "from": "n_C2",
+          "to": "n_C1",
+          "name": "Rescan",
+          "event": "Rescan",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_8",
+          "from": "n_C2",
+          "to": "q_known",
+          "name": "a network",
+          "event": "a network",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_9",
+          "from": "n_C2",
+          "to": "n_F0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_10",
+          "from": "q_known",
+          "to": "n_C5",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_11",
+          "from": "q_known",
+          "to": "n_C4",
+          "name": "no: needs a password",
+          "event": "no: needs a password",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_12",
+          "from": "n_C4",
+          "to": "n_C5",
+          "name": "OK on the check slot",
+          "event": "OK on the check slot",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_13",
+          "from": "n_C4",
+          "to": "n_C2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_14",
+          "from": "n_C5",
+          "to": "n_C6a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "wifi_connected"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_15",
+          "from": "n_C5",
+          "to": "n_C6b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "wifi_connect_failed"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_16",
+          "from": "n_C5",
+          "to": "n_C2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_17",
+          "from": "n_C6a",
+          "to": "n_F0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 1500
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_18",
+          "from": "n_C6b",
+          "to": "n_C4",
+          "name": "retry password",
+          "event": "retry password",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_19",
+          "from": "n_C6b",
+          "to": "n_C2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_20",
+          "from": "n_N1",
+          "to": "n_C5",
+          "name": "connect with saved password",
+          "event": "connect with saved password",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_21",
+          "from": "n_N1",
+          "to": "n_F0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_22",
+          "from": "n_N1",
+          "to": "n_N1d",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_23",
+          "from": "n_N1d",
+          "to": "n_N1",
+          "name": "forgotten",
+          "event": "forgotten",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_wifi_new_24",
+          "from": "n_N1d",
+          "to": "n_N1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bluetooth-new",
+      "states": [
+        {
+          "id": "n_B_M0",
+          "kind": "screen",
+          "title": "BT Menu (waiting)",
+          "note": "Advertising starts here; stops on leaving if nothing is connected",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic104",
+            "name": "BT B-M0 BT Menu Waiting-new",
+            "file": "screens/bt-b-m0-bt-menu-waiting-new_pic104.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "n_B_P",
+          "kind": "screen",
+          "title": "Pair request",
+          "note": "Known hosts connect without asking. Bond store full -> oldest removed (LRU)",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic106",
+            "name": "BT B-P Pair Request-new",
+            "file": "screens/bt-b-p-pair-request-new_pic106.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_B_M1",
+          "kind": "screen",
+          "title": "BT Menu (connected)",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic105",
+            "name": "BT B-M1 BT Menu Connected-new",
+            "file": "screens/bt-b-m1-bt-menu-connected-new_pic105.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "n_B0",
+          "kind": "screen",
+          "title": "Remote groups",
+          "note": "Keys group: arrows, PgUp/PgDn, Esc, Enter (same layout as Media)",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic107",
+            "name": "BT B0 Remote Groups-new",
+            "file": "screens/bt-b0-remote-groups-new_pic107.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 400
+        },
+        {
+          "id": "n_B1",
+          "kind": "screen",
+          "title": "Media keys",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic108",
+            "name": "BT B1 Media Keys-new",
+            "file": "screens/bt-b1-media-keys-new_pic108.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_B1p",
+          "kind": "screen",
+          "title": "Presentation keys",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic109",
+            "name": "BT B1p Presentation Keys-new",
+            "file": "screens/bt-b1p-presentation-keys-new_pic109.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_B1x",
+          "kind": "screen",
+          "title": "Not connected",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic110",
+            "name": "BT B1x Not Connected-new",
+            "file": "screens/bt-b1x-not-connected-new_pic110.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_P1",
+          "kind": "screen",
+          "title": "Paired Devices",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic111",
+            "name": "BT P1 Paired Devices-new",
+            "file": "screens/bt-p1-paired-devices-new_pic111.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 520
+        },
+        {
+          "id": "n_P2",
+          "kind": "screen",
+          "title": "Device detail",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic112",
+            "name": "BT P2 Paired Detail-new",
+            "file": "screens/bt-p2-paired-detail-new_pic112.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 520,
+          "y": 280
+        },
+        {
+          "id": "n_P1d",
+          "kind": "screen",
+          "title": "Forget device?",
+          "note": "Forgetting the connected host disconnects it",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic113",
+            "name": "BT P1d Forget Device-new",
+            "file": "screens/bt-p1d-forget-device-new_pic113.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 400
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_bt_new_1",
+          "from": "n_B_M0",
+          "to": "n_B0",
+          "name": "Remote Control",
+          "event": "Remote Control",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_2",
+          "from": "n_B_M0",
+          "to": "n_P1",
+          "name": "Paired Devices",
+          "event": "Paired Devices",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_3",
+          "from": "n_B_M0",
+          "to": "n_B_P",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ble_pair_request"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_4",
+          "from": "n_B_M0",
+          "to": "n_B_M1",
+          "name": "known host",
+          "event": "known host",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ble_connected"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_5",
+          "from": "n_B_M0",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_6",
+          "from": "n_B_P",
+          "to": "n_B_M1",
+          "name": "pair",
+          "event": "pair",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_7",
+          "from": "n_B_P",
+          "to": "n_B_M0",
+          "name": "reject",
+          "event": "reject",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_8",
+          "from": "n_B_M1",
+          "to": "n_B0",
+          "name": "Remote Control",
+          "event": "Remote Control",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_9",
+          "from": "n_B_M1",
+          "to": "n_P1",
+          "name": "Paired Devices",
+          "event": "Paired Devices",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_10",
+          "from": "n_B_M1",
+          "to": "n_B_M0",
+          "name": "Disconnect",
+          "event": "Disconnect",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_11",
+          "from": "n_B_M1",
+          "to": "n_B_M0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ble_disconnected"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_12",
+          "from": "n_B_M1",
+          "to": "n_launcher",
+          "name": "stays connected",
+          "event": "stays connected",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_13",
+          "from": "n_B0",
+          "to": "n_B1",
+          "name": "Media",
+          "event": "Media",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_14",
+          "from": "n_B0",
+          "to": "n_B1p",
+          "name": "Presentation",
+          "event": "Presentation",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_15",
+          "from": "n_B0",
+          "to": "n_B_M1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_16",
+          "from": "n_B1",
+          "to": "n_B1",
+          "name": "send key",
+          "event": "send key",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_17",
+          "from": "n_B1",
+          "to": "n_B1",
+          "name": "repeat while held",
+          "event": "repeat while held",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "repeat"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_18",
+          "from": "n_B1",
+          "to": "n_B0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_19",
+          "from": "n_B1p",
+          "to": "n_B1p",
+          "name": "send key",
+          "event": "send key",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_20",
+          "from": "n_B1p",
+          "to": "n_B1p",
+          "name": "repeat while held",
+          "event": "repeat while held",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "repeat"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_21",
+          "from": "n_B1p",
+          "to": "n_B0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_22",
+          "from": "n_B1",
+          "to": "n_B1x",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ble_disconnected"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_23",
+          "from": "n_B1x",
+          "to": "n_B1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "ble_connected"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_24",
+          "from": "n_B1x",
+          "to": "n_B0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_25",
+          "from": "n_P1",
+          "to": "n_P2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_26",
+          "from": "n_P1",
+          "to": "n_B_M1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_27",
+          "from": "n_P1",
+          "to": "n_P1d",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_28",
+          "from": "n_P2",
+          "to": "n_P1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_29",
+          "from": "n_P1d",
+          "to": "n_P1",
+          "name": "forgotten",
+          "event": "forgotten",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_bt_new_30",
+          "from": "n_P1d",
+          "to": "n_P1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Games-new",
+      "states": [
+        {
+          "id": "n_G1",
+          "kind": "screen",
+          "title": "Games Menu",
+          "note": "Built-in first, then SD packs. No SD -> toast \"SD not available\"",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic114",
+            "name": "Games G1 Games Menu-new",
+            "file": "screens/games-g1-games-menu-new_pic114.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "n_G2",
+          "kind": "screen",
+          "title": "Loading pack",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic115",
+            "name": "Games G2 Loading Pack-new",
+            "file": "screens/games-g2-loading-pack-new_pic115.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_G2f",
+          "kind": "screen",
+          "title": "Load failed",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic116",
+            "name": "Games G2f Load Failed-new",
+            "file": "screens/games-g2f-load-failed-new_pic116.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_G3",
+          "kind": "screen",
+          "title": "Game (canvas)",
+          "note": "Full screen, no status bar. Idle dim/sleep off. Level 0: host owns Cancel hold. Levels 1/2 (bypass list) draw their own pause.",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic117",
+            "name": "Games G3 Game Canvas-new",
+            "file": "screens/games-g3-game-canvas-new_pic117.png",
+            "missing": false,
+            "template": "canvas"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "n_G4",
+          "kind": "screen",
+          "title": "Pause menu (host)",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic118",
+            "name": "Games G4 Pause Menu-new",
+            "file": "screens/games-g4-pause-menu-new_pic118.png",
+            "missing": false,
+            "template": "canvas"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_G5",
+          "kind": "screen",
+          "title": "Failsafe exit",
+          "note": "Works at every level; progress bar from 1.5 s",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic119",
+            "name": "Games G5 Failsafe Exit-new",
+            "file": "screens/games-g5-failsafe-exit-new_pic119.png",
+            "missing": false,
+            "template": "canvas"
+          },
+          "x": 520,
+          "y": 280
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_games_new_1",
+          "from": "n_G1",
+          "to": "n_G3",
+          "name": "built-in game",
+          "event": "built-in game",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_2",
+          "from": "n_G1",
+          "to": "n_G2",
+          "name": "SD pack",
+          "event": "SD pack",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_3",
+          "from": "n_G1",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_4",
+          "from": "n_G2",
+          "to": "n_G3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "pack_loaded"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_5",
+          "from": "n_G2",
+          "to": "n_G2f",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "pack_failed"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_6",
+          "from": "n_G2f",
+          "to": "n_G1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_7",
+          "from": "n_G3",
+          "to": "n_G4",
+          "name": "level 0 only",
+          "event": "level 0 only",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_games_new_8",
+          "from": "n_G3",
+          "to": "n_G5",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "system",
+            "event": "app_failsafe"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_9",
+          "from": "n_G4",
+          "to": "n_G3",
+          "name": "Resume",
+          "event": "Resume",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_10",
+          "from": "n_G4",
+          "to": "n_G3",
+          "name": "Restart",
+          "event": "Restart",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_11",
+          "from": "n_G4",
+          "to": "n_G1",
+          "name": "Exit (game saves in onExit)",
+          "event": "Exit (game saves in onExit)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_12",
+          "from": "n_G4",
+          "to": "n_G3",
+          "name": "Resume",
+          "event": "Resume",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_games_new_13",
+          "from": "n_G5",
+          "to": "n_G1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "timer",
+            "ms": 500
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings-new",
+      "states": [
+        {
+          "id": "n_T0",
+          "kind": "screen",
+          "title": "Settings Menu",
+          "note": "",
+          "inputMode": "list",
+          "start": true,
+          "mockup": {
+            "id": "pic120",
+            "name": "Settings T0 Settings Menu-new",
+            "file": "screens/settings-t0-settings-menu-new_pic120.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "n_launcher",
+          "kind": "screen",
+          "title": "Launcher (back)",
+          "note": "Leave this flow: back to the Launcher",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic75",
+            "name": "Main M6a Launcher-new",
+            "file": "screens/main-m6a-launcher-new_pic75.png",
+            "missing": false,
+            "template": "tpl_launcher_new"
+          },
+          "x": 280,
+          "y": 40
+        },
+        {
+          "id": "n_T1",
+          "kind": "screen",
+          "title": "Display",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic121",
+            "name": "Settings T1 Display-new",
+            "file": "screens/settings-t1-display-new_pic121.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 160
+        },
+        {
+          "id": "n_T1e",
+          "kind": "screen",
+          "title": "Display: editing",
+          "note": "< > adjust, hold to speed up",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic122",
+            "name": "Settings T1e Display Editing-new",
+            "file": "screens/settings-t1e-display-editing-new_pic122.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 40
+        },
+        {
+          "id": "n_T2",
+          "kind": "screen",
+          "title": "Power",
+          "note": "Sleep after hides when Never is chosen; numbers edit in the row like T1e",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic123",
+            "name": "Settings T2 Power-new",
+            "file": "screens/settings-t2-power-new_pic123.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 280
+        },
+        {
+          "id": "n_T2p",
+          "kind": "screen",
+          "title": "Sleep mode",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic124",
+            "name": "Settings T2p Sleep Mode Picker-new",
+            "file": "screens/settings-t2p-sleep-mode-picker-new_pic124.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 160
+        },
+        {
+          "id": "n_T3",
+          "kind": "screen",
+          "title": "Sound",
+          "note": "Toggles flip on OK; Volume edits in the row",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic125",
+            "name": "Settings T3 Sound-new",
+            "file": "screens/settings-t3-sound-new_pic125.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 400
+        },
+        {
+          "id": "q_pinset",
+          "kind": "internal",
+          "title": "PIN set?",
+          "note": "",
+          "x": 280,
+          "y": 520
+        },
+        {
+          "id": "n_K1a",
+          "kind": "screen",
+          "title": "Lock Screen (no PIN)",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic126",
+            "name": "Settings K1a Lock No PIN-new",
+            "file": "screens/settings-k1a-lock-no-pin-new_pic126.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 280
+        },
+        {
+          "id": "n_K1b",
+          "kind": "screen",
+          "title": "Lock Screen (PIN)",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic127",
+            "name": "Settings K1b Lock With PIN-new",
+            "file": "screens/settings-k1b-lock-with-pin-new_pic127.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 400
+        },
+        {
+          "id": "n_K3a",
+          "kind": "screen",
+          "title": "New PIN",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic128",
+            "name": "Settings K3a New PIN-new",
+            "file": "screens/settings-k3a-new-pin-new_pic128.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 760,
+          "y": 40
+        },
+        {
+          "id": "n_K3b",
+          "kind": "screen",
+          "title": "Confirm PIN",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic129",
+            "name": "Settings K3b Confirm PIN-new",
+            "file": "screens/settings-k3b-confirm-pin-new_pic129.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 1000,
+          "y": 40
+        },
+        {
+          "id": "q_same",
+          "kind": "internal",
+          "title": "PINs match?",
+          "note": "",
+          "x": 1240,
+          "y": 40
+        },
+        {
+          "id": "n_K3c",
+          "kind": "screen",
+          "title": "PINs do not match",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic130",
+            "name": "Settings K3c PIN Mismatch-new",
+            "file": "screens/settings-k3c-pin-mismatch-new_pic130.png",
+            "missing": false,
+            "template": "tpl_message_new"
+          },
+          "x": 1480,
+          "y": 40
+        },
+        {
+          "id": "n_Kold",
+          "kind": "screen",
+          "title": "Current PIN (to change)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic72",
+            "name": "Main M4a PIN Entry-new",
+            "file": "screens/main-m4a-pin-entry-new_pic72.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 760,
+          "y": 160
+        },
+        {
+          "id": "q_oldok",
+          "kind": "internal",
+          "title": "Current PIN correct?",
+          "note": "Wrong tries count with the Lock screen counter",
+          "x": 1000,
+          "y": 160
+        },
+        {
+          "id": "n_Krold",
+          "kind": "screen",
+          "title": "Current PIN (to remove)",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic72",
+            "name": "Main M4a PIN Entry-new",
+            "file": "screens/main-m4a-pin-entry-new_pic72.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 760,
+          "y": 280
+        },
+        {
+          "id": "q_roldok",
+          "kind": "internal",
+          "title": "Current PIN correct?",
+          "note": "",
+          "x": 1000,
+          "y": 280
+        },
+        {
+          "id": "n_K5",
+          "kind": "screen",
+          "title": "Remove PIN?",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic131",
+            "name": "Settings K5 Remove PIN-new",
+            "file": "screens/settings-k5-remove-pin-new_pic131.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1240,
+          "y": 160
+        },
+        {
+          "id": "n_K6",
+          "kind": "screen",
+          "title": "Lock message",
+          "note": "Can be empty; length limit TBD",
+          "inputMode": "text",
+          "mockup": {
+            "id": "pic132",
+            "name": "Settings K6 Lock Message-new",
+            "file": "screens/settings-k6-lock-message-new_pic132.png",
+            "missing": false,
+            "template": "tpl_input_new"
+          },
+          "x": 760,
+          "y": 400
+        },
+        {
+          "id": "n_D0",
+          "kind": "screen",
+          "title": "Date & Time",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic133",
+            "name": "Settings D0 Date Time-new",
+            "file": "screens/settings-d0-date-time-new_pic133.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 640
+        },
+        {
+          "id": "n_D0e",
+          "kind": "screen",
+          "title": "Editing time",
+          "note": "OK moves to the next field",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic134",
+            "name": "Settings D0e Time Editing-new",
+            "file": "screens/settings-d0e-time-editing-new_pic134.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 520
+        },
+        {
+          "id": "n_Y1",
+          "kind": "screen",
+          "title": "System",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic135",
+            "name": "Settings Y1 System-new",
+            "file": "screens/settings-y1-system-new_pic135.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 280,
+          "y": 760
+        },
+        {
+          "id": "n_Y2",
+          "kind": "screen",
+          "title": "Storage",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic136",
+            "name": "Settings Y2 Storage-new",
+            "file": "screens/settings-y2-storage-new_pic136.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 520,
+          "y": 640
+        },
+        {
+          "id": "n_Y6",
+          "kind": "screen",
+          "title": "Firmware",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic140",
+            "name": "Settings Y6 Firmware-new",
+            "file": "screens/settings-y6-firmware-new_pic140.png",
+            "missing": false,
+            "template": "tpl_detail_new"
+          },
+          "x": 520,
+          "y": 760
+        },
+        {
+          "id": "n_Y3",
+          "kind": "screen",
+          "title": "Reset scope",
+          "note": "",
+          "inputMode": "list",
+          "mockup": {
+            "id": "pic137",
+            "name": "Settings Y3 Reset Scope-new",
+            "file": "screens/settings-y3-reset-scope-new_pic137.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 520,
+          "y": 880
+        },
+        {
+          "id": "n_Y4",
+          "kind": "screen",
+          "title": "Emergency code",
+          "note": "Always required, every scope",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic138",
+            "name": "Settings Y4 Reset Code-new",
+            "file": "screens/settings-y4-reset-code-new_pic138.png",
+            "missing": false,
+            "template": "tpl_digit_new"
+          },
+          "x": 760,
+          "y": 520
+        },
+        {
+          "id": "q_code",
+          "kind": "internal",
+          "title": "Code correct?",
+          "note": "Wrong tries count with the Lock screen counter",
+          "x": 1000,
+          "y": 400
+        },
+        {
+          "id": "n_Y5",
+          "kind": "screen",
+          "title": "Confirm reset",
+          "note": "",
+          "inputMode": "normal",
+          "mockup": {
+            "id": "pic139",
+            "name": "Settings Y5 Reset Confirm-new",
+            "file": "screens/settings-y5-reset-confirm-new_pic139.png",
+            "missing": false,
+            "template": "tpl_list_new"
+          },
+          "x": 1240,
+          "y": 280
+        },
+        {
+          "id": "q_reboot",
+          "kind": "internal",
+          "title": "Reset the chosen scope and reboot",
+          "note": "SD files are kept",
+          "x": 1480,
+          "y": 160
+        }
+      ],
+      "transitions": [
+        {
+          "id": "e_flow_settings_new_1",
+          "from": "n_T0",
+          "to": "n_T1",
+          "name": "Display",
+          "event": "Display",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_2",
+          "from": "n_T0",
+          "to": "n_T2",
+          "name": "Power",
+          "event": "Power",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_3",
+          "from": "n_T0",
+          "to": "n_T3",
+          "name": "Sound",
+          "event": "Sound",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_4",
+          "from": "n_T0",
+          "to": "q_pinset",
+          "name": "Lock Screen",
+          "event": "Lock Screen",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_5",
+          "from": "n_T0",
+          "to": "n_D0",
+          "name": "Date & Time",
+          "event": "Date & Time",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_6",
+          "from": "n_T0",
+          "to": "n_Y1",
+          "name": "System",
+          "event": "System",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_7",
+          "from": "n_T0",
+          "to": "n_launcher",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_8",
+          "from": "n_T1",
+          "to": "n_T1e",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_9",
+          "from": "n_T1",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_10",
+          "from": "n_T1e",
+          "to": "n_T1",
+          "name": "save",
+          "event": "save",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_11",
+          "from": "n_T1e",
+          "to": "n_T1",
+          "name": "restore old value",
+          "event": "restore old value",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_12",
+          "from": "n_T2",
+          "to": "n_T2p",
+          "name": "Sleep mode",
+          "event": "Sleep mode",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_13",
+          "from": "n_T2",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_14",
+          "from": "n_T2p",
+          "to": "n_T2",
+          "name": "chosen",
+          "event": "chosen",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_15",
+          "from": "n_T2p",
+          "to": "n_T2",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_16",
+          "from": "n_T3",
+          "to": "n_T3",
+          "name": "toggle",
+          "event": "toggle",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_17",
+          "from": "n_T3",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_18",
+          "from": "q_pinset",
+          "to": "n_K1b",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_19",
+          "from": "q_pinset",
+          "to": "n_K1a",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_20",
+          "from": "n_K1a",
+          "to": "n_K3a",
+          "name": "Set PIN",
+          "event": "Set PIN",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_21",
+          "from": "n_K1a",
+          "to": "n_K6",
+          "name": "Lock message",
+          "event": "Lock message",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_22",
+          "from": "n_K1a",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_23",
+          "from": "n_K1b",
+          "to": "n_Kold",
+          "name": "Change PIN",
+          "event": "Change PIN",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_24",
+          "from": "n_K1b",
+          "to": "n_Krold",
+          "name": "Remove PIN",
+          "event": "Remove PIN",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_25",
+          "from": "n_K1b",
+          "to": "n_K6",
+          "name": "Lock message",
+          "event": "Lock message",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_26",
+          "from": "n_K1b",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_27",
+          "from": "n_K3a",
+          "to": "n_K3b",
+          "name": "OK on the 6th digit",
+          "event": "OK on the 6th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_28",
+          "from": "n_K3a",
+          "to": "n_K1a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_29",
+          "from": "n_K3b",
+          "to": "q_same",
+          "name": "OK on the 6th digit",
+          "event": "OK on the 6th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_30",
+          "from": "n_K3b",
+          "to": "n_K3a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_31",
+          "from": "q_same",
+          "to": "n_K1b",
+          "name": "yes: \"PIN set\"",
+          "event": "yes: \"PIN set\"",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_32",
+          "from": "q_same",
+          "to": "n_K3c",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_33",
+          "from": "n_K3c",
+          "to": "n_K3a",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_34",
+          "from": "n_Kold",
+          "to": "q_oldok",
+          "name": "OK on the 6th digit",
+          "event": "OK on the 6th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_35",
+          "from": "n_Kold",
+          "to": "n_K1b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_36",
+          "from": "q_oldok",
+          "to": "n_K3a",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_37",
+          "from": "q_oldok",
+          "to": "n_Kold",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_38",
+          "from": "n_Krold",
+          "to": "q_roldok",
+          "name": "OK on the 6th digit",
+          "event": "OK on the 6th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_39",
+          "from": "n_Krold",
+          "to": "n_K1b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_40",
+          "from": "q_roldok",
+          "to": "n_K5",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_41",
+          "from": "q_roldok",
+          "to": "n_Krold",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_42",
+          "from": "n_K5",
+          "to": "n_K1a",
+          "name": "\"PIN removed\"",
+          "event": "\"PIN removed\"",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_43",
+          "from": "n_K5",
+          "to": "n_K1b",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_44",
+          "from": "n_K6",
+          "to": "n_K1a",
+          "name": "saved (came from no-PIN page)",
+          "event": "saved (came from no-PIN page)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_45",
+          "from": "n_K6",
+          "to": "n_K1b",
+          "name": "saved (came from PIN page)",
+          "event": "saved (came from PIN page)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_46",
+          "from": "n_K6",
+          "to": "n_K1a",
+          "name": "cancel (no-PIN page)",
+          "event": "cancel (no-PIN page)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_47",
+          "from": "n_K6",
+          "to": "n_K1b",
+          "name": "cancel (PIN page)",
+          "event": "cancel (PIN page)",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_48",
+          "from": "n_D0",
+          "to": "n_D0e",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_49",
+          "from": "n_D0",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_50",
+          "from": "n_D0e",
+          "to": "n_D0",
+          "name": "last field: saved to DS3231",
+          "event": "last field: saved to DS3231",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_51",
+          "from": "n_D0e",
+          "to": "n_D0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_52",
+          "from": "n_Y1",
+          "to": "n_Y2",
+          "name": "Storage",
+          "event": "Storage",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_53",
+          "from": "n_Y1",
+          "to": "n_Y3",
+          "name": "Factory Reset",
+          "event": "Factory Reset",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_54",
+          "from": "n_Y1",
+          "to": "n_Y6",
+          "name": "Firmware",
+          "event": "Firmware",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_55",
+          "from": "n_Y1",
+          "to": "n_T0",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_56",
+          "from": "n_Y2",
+          "to": "n_Y1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_57",
+          "from": "n_Y6",
+          "to": "n_Y1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_58",
+          "from": "n_Y3",
+          "to": "n_Y4",
+          "name": "scope chosen",
+          "event": "scope chosen",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_59",
+          "from": "n_Y3",
+          "to": "n_Y1",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_60",
+          "from": "n_Y4",
+          "to": "q_code",
+          "name": "OK on the 8th digit",
+          "event": "OK on the 8th digit",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_61",
+          "from": "n_Y4",
+          "to": "n_Y3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "hold"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_62",
+          "from": "q_code",
+          "to": "n_Y5",
+          "name": "yes",
+          "event": "yes",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "fade",
+            "ms": 150,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_63",
+          "from": "q_code",
+          "to": "n_Y4",
+          "name": "no",
+          "event": "no",
+          "note": "",
+          "trigger": null,
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_64",
+          "from": "n_Y5",
+          "to": "q_reboot",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "ok",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        },
+        {
+          "id": "e_flow_settings_new_65",
+          "from": "n_Y5",
+          "to": "n_Y3",
+          "name": "",
+          "event": "",
+          "note": "",
+          "trigger": {
+            "type": "button",
+            "held": null,
+            "button": "cancel",
+            "gesture": "tap"
+          },
+          "transition": {
+            "type": "cut",
+            "ms": 0,
+            "easing": "linear"
+          }
+        }
+      ]
+    }
+  ]
+}

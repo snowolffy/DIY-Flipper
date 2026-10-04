@@ -1,0 +1,1163 @@
+{
+  "format": "flipper-ui-flow/2",
+  "schema": {
+    "about": "A UI flow of the DIY Flipper (128x160 screen) as a state machine. states = screens and internal decisions; transitions = what moves from one state to another. Import accepts this file back (Flows > Import). x / y are optional: states without them are laid out on a grid.",
+    "state": {
+      "id": "unique string",
+      "kind": "screen | internal (a firmware decision, no screen)",
+      "title": "string",
+      "note": "string",
+      "inputMode": "screens: normal | list | text (how the firmware treats the buttons on that screen)",
+      "start": "true on the one state the flow starts at",
+      "end": "true on a screen that is meant to have no way out",
+      "mockup": "screens: { id, name, file, template } of the linked asset (export only; import uses mockup.id)",
+      "x": "number, optional",
+      "y": "number, optional"
+    },
+    "transition": {
+      "id": "unique string",
+      "from": "state id",
+      "to": "state id",
+      "name": "free text label (event = same, for older readers)",
+      "note": "string",
+      "trigger": "null, or { type: 'button', held: null|button, button, gesture } | { type: 'timer', ms } | { type: 'system', event: systemEvents[].id }",
+      "transition": "{ type: cut | slide | push | fade, dir: left|right|up|down (slide/push: where things move), ms, easing: linear|ease-in|ease-out|ease-in-out }"
+    },
+    "buttons": "ok, cancel, left (<), right (>), power. There is no D-pad, no up/down, no touch.",
+    "gestures": "tap: on press, or on release (before hold_ms) when the same button also has a hold/repeat transition on that screen; hold: once at hold_ms; repeat: at hold_ms, then again faster and faster; release: on release, any duration. held: that button must already be down; when such a combo fires, the held button's own tap/release is skipped.",
+    "input": {
+      "hold_ms": 500,
+      "repeat_start_interval_ms": 200,
+      "repeat_accel": 0.8,
+      "repeat_min_interval_ms": 40,
+      "normal": "hold OK + < / > scrolls up / down",
+      "list": "< / > move the selection up / down (no need to hold OK); hold Cancel on a list item deletes it",
+      "text": "hold OK switches upper / lower case; hold Cancel cancels the input"
+    }
+  },
+  "name": "NFC-new",
+  "systemEvents": [
+    {
+      "id": "nfc_card_found",
+      "name": "NFC card found"
+    },
+    {
+      "id": "sd_removed",
+      "name": "SD card removed"
+    },
+    {
+      "id": "sd_inserted",
+      "name": "SD card inserted"
+    },
+    {
+      "id": "battery_low",
+      "name": "Low battery"
+    },
+    {
+      "id": "battery_critical",
+      "name": "Battery critical"
+    },
+    {
+      "id": "ir_received",
+      "name": "IR signal received"
+    },
+    {
+      "id": "wifi_connected",
+      "name": "WiFi connected"
+    },
+    {
+      "id": "wifi_lost",
+      "name": "WiFi lost"
+    },
+    {
+      "id": "ble_connected",
+      "name": "BLE connected"
+    },
+    {
+      "id": "ble_disconnected",
+      "name": "BLE disconnected"
+    },
+    {
+      "id": "boot_done",
+      "name": "Boot checks done"
+    },
+    {
+      "id": "lockout_over",
+      "name": "Lockout over"
+    },
+    {
+      "id": "ir_learn_timeout",
+      "name": "IR learn timeout"
+    },
+    {
+      "id": "nfc_read_done",
+      "name": "NFC read done"
+    },
+    {
+      "id": "nfc_card_lost",
+      "name": "NFC card lost"
+    },
+    {
+      "id": "nfc_write_done",
+      "name": "NFC write done"
+    },
+    {
+      "id": "wifi_scan_done",
+      "name": "WiFi scan done"
+    },
+    {
+      "id": "wifi_connect_failed",
+      "name": "WiFi connect failed"
+    },
+    {
+      "id": "ble_pair_request",
+      "name": "BLE pair request"
+    },
+    {
+      "id": "pack_loaded",
+      "name": "Game pack loaded"
+    },
+    {
+      "id": "pack_failed",
+      "name": "Game pack failed"
+    },
+    {
+      "id": "app_failsafe",
+      "name": "App failsafe exit (Cancel held 3 s)"
+    }
+  ],
+  "states": [
+    {
+      "id": "n_N0",
+      "kind": "screen",
+      "title": "NFC Menu",
+      "note": "PN532 starts here; no answer -> \"NFC module not found\"",
+      "inputMode": "list",
+      "start": true,
+      "mockup": {
+        "id": "pic79",
+        "name": "NFC N0 NFC Menu-new",
+        "file": "screens/nfc-n0-nfc-menu-new_pic79.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 40,
+      "y": 40
+    },
+    {
+      "id": "n_launcher",
+      "kind": "screen",
+      "title": "Launcher (back)",
+      "note": "Leave this flow: back to the Launcher",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic75",
+        "name": "Main M6a Launcher-new",
+        "file": "screens/main-m6a-launcher-new_pic75.png",
+        "missing": false,
+        "template": "tpl_launcher_new"
+      },
+      "x": 280,
+      "y": 40
+    },
+    {
+      "id": "n_R1",
+      "kind": "screen",
+      "title": "Read: place card",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic80",
+        "name": "NFC R1 Read Waiting-new",
+        "file": "screens/nfc-r1-read-waiting-new_pic80.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 280,
+      "y": 160
+    },
+    {
+      "id": "n_R2",
+      "kind": "screen",
+      "title": "Reading",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic81",
+        "name": "NFC R2 Reading-new",
+        "file": "screens/nfc-r2-reading-new_pic81.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 520,
+      "y": 40
+    },
+    {
+      "id": "n_R3",
+      "kind": "screen",
+      "title": "Read result",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic82",
+        "name": "NFC R3 Read Result-new",
+        "file": "screens/nfc-r3-read-result-new_pic82.png",
+        "missing": false,
+        "template": "tpl_detail_new"
+      },
+      "x": 760,
+      "y": 40
+    },
+    {
+      "id": "n_R4",
+      "kind": "screen",
+      "title": "Name the dump",
+      "note": "",
+      "inputMode": "text",
+      "mockup": {
+        "id": "pic141",
+        "name": "Tpl TP1 Text Input-new",
+        "file": "screens/tpl-tp1-text-input-new_pic141.png",
+        "missing": false,
+        "template": "tpl_input_new"
+      },
+      "x": 1000,
+      "y": 40
+    },
+    {
+      "id": "n_R5",
+      "kind": "screen",
+      "title": "Saved",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic56",
+        "name": "IR L5 Saved-new",
+        "file": "screens/ir-l5-saved-new_pic56.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 1240,
+      "y": 40
+    },
+    {
+      "id": "n_W1",
+      "kind": "screen",
+      "title": "Write: pick dump",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic83",
+        "name": "NFC W1 Write Pick Dump-new",
+        "file": "screens/nfc-w1-write-pick-dump-new_pic83.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 280,
+      "y": 280
+    },
+    {
+      "id": "n_W2",
+      "kind": "screen",
+      "title": "Write: confirm",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic84",
+        "name": "NFC W2 Write Confirm-new",
+        "file": "screens/nfc-w2-write-confirm-new_pic84.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 520,
+      "y": 160
+    },
+    {
+      "id": "n_W3",
+      "kind": "screen",
+      "title": "Write: place card",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic85",
+        "name": "NFC W3 Write Waiting-new",
+        "file": "screens/nfc-w3-write-waiting-new_pic85.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 760,
+      "y": 160
+    },
+    {
+      "id": "q_typeok",
+      "kind": "internal",
+      "title": "Card type matches?",
+      "note": "",
+      "x": 1000,
+      "y": 160
+    },
+    {
+      "id": "n_W4",
+      "kind": "screen",
+      "title": "Writing",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic86",
+        "name": "NFC W4 Writing-new",
+        "file": "screens/nfc-w4-writing-new_pic86.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 1240,
+      "y": 160
+    },
+    {
+      "id": "n_W5a",
+      "kind": "screen",
+      "title": "Write done",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic87",
+        "name": "NFC W5a Write Done-new",
+        "file": "screens/nfc-w5a-write-done-new_pic87.png",
+        "missing": false,
+        "template": "tpl_detail_new"
+      },
+      "x": 1480,
+      "y": 40
+    },
+    {
+      "id": "n_W5b",
+      "kind": "screen",
+      "title": "Type mismatch",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic88",
+        "name": "NFC W5b Write Type Mismatch-new",
+        "file": "screens/nfc-w5b-write-type-mismatch-new_pic88.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 1240,
+      "y": 280
+    },
+    {
+      "id": "n_E1",
+      "kind": "screen",
+      "title": "Emulate: pick dump",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic89",
+        "name": "NFC E1 Emulate Pick Dump-new",
+        "file": "screens/nfc-e1-emulate-pick-dump-new_pic89.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 280,
+      "y": 400
+    },
+    {
+      "id": "q_emul",
+      "kind": "internal",
+      "title": "Dump emulatable?",
+      "note": "",
+      "x": 520,
+      "y": 280
+    },
+    {
+      "id": "n_E1p",
+      "kind": "screen",
+      "title": "Cannot emulate",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic90",
+        "name": "NFC E1p Cannot Emulate-new",
+        "file": "screens/nfc-e1p-cannot-emulate-new_pic90.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 760,
+      "y": 280
+    },
+    {
+      "id": "n_E2",
+      "kind": "screen",
+      "title": "Emulating",
+      "note": "Idle sleep paused while emulating",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic91",
+        "name": "NFC E2 Emulating-new",
+        "file": "screens/nfc-e2-emulating-new_pic91.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 760,
+      "y": 400
+    },
+    {
+      "id": "n_D1",
+      "kind": "screen",
+      "title": "Saved Dumps",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic92",
+        "name": "NFC D1 Saved Dumps-new",
+        "file": "screens/nfc-d1-saved-dumps-new_pic92.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 280,
+      "y": 520
+    },
+    {
+      "id": "n_D1d",
+      "kind": "screen",
+      "title": "Delete dump?",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic93",
+        "name": "NFC D1d Delete Dump-new",
+        "file": "screens/nfc-d1d-delete-dump-new_pic93.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 520,
+      "y": 400
+    },
+    {
+      "id": "n_D2",
+      "kind": "screen",
+      "title": "Dump detail",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic94",
+        "name": "NFC D2 Dump Detail-new",
+        "file": "screens/nfc-d2-dump-detail-new_pic94.png",
+        "missing": false,
+        "template": "tpl_detail_new"
+      },
+      "x": 520,
+      "y": 520
+    }
+  ],
+  "transitions": [
+    {
+      "id": "e_flow_nfc_new_1",
+      "from": "n_N0",
+      "to": "n_R1",
+      "name": "Read Card",
+      "event": "Read Card",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_2",
+      "from": "n_N0",
+      "to": "n_W1",
+      "name": "Write Card",
+      "event": "Write Card",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_3",
+      "from": "n_N0",
+      "to": "n_E1",
+      "name": "Emulate Card",
+      "event": "Emulate Card",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_4",
+      "from": "n_N0",
+      "to": "n_D1",
+      "name": "Saved Dumps",
+      "event": "Saved Dumps",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_5",
+      "from": "n_N0",
+      "to": "n_launcher",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_6",
+      "from": "n_R1",
+      "to": "n_R2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "nfc_card_found"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_7",
+      "from": "n_R1",
+      "to": "n_N0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_8",
+      "from": "n_R2",
+      "to": "n_R3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "nfc_read_done"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_9",
+      "from": "n_R2",
+      "to": "n_R1",
+      "name": "card lost: try again",
+      "event": "card lost: try again",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "nfc_card_lost"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_10",
+      "from": "n_R2",
+      "to": "n_R1",
+      "name": "stop",
+      "event": "stop",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_11",
+      "from": "n_R3",
+      "to": "n_R4",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_12",
+      "from": "n_R3",
+      "to": "n_R1",
+      "name": "discard",
+      "event": "discard",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_13",
+      "from": "n_R4",
+      "to": "n_R5",
+      "name": "OK on the check slot",
+      "event": "OK on the check slot",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_14",
+      "from": "n_R4",
+      "to": "n_R3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_15",
+      "from": "n_R5",
+      "to": "n_R1",
+      "name": "read the next card",
+      "event": "read the next card",
+      "note": "",
+      "trigger": {
+        "type": "timer",
+        "ms": 1200
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_16",
+      "from": "n_W1",
+      "to": "n_W2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_17",
+      "from": "n_W1",
+      "to": "n_N0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_18",
+      "from": "n_W2",
+      "to": "n_W3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_19",
+      "from": "n_W2",
+      "to": "n_W1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_20",
+      "from": "n_W3",
+      "to": "q_typeok",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "nfc_card_found"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_21",
+      "from": "n_W3",
+      "to": "n_W1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_22",
+      "from": "q_typeok",
+      "to": "n_W4",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_23",
+      "from": "q_typeok",
+      "to": "n_W5b",
+      "name": "no",
+      "event": "no",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_24",
+      "from": "n_W4",
+      "to": "n_W5a",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "nfc_write_done"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_25",
+      "from": "n_W4",
+      "to": "n_W5a",
+      "name": "stop (shows sectors written)",
+      "event": "stop (shows sectors written)",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_26",
+      "from": "n_W5a",
+      "to": "n_W1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_27",
+      "from": "n_W5b",
+      "to": "n_W1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_28",
+      "from": "n_E1",
+      "to": "q_emul",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_29",
+      "from": "n_E1",
+      "to": "n_N0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_30",
+      "from": "q_emul",
+      "to": "n_E2",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_31",
+      "from": "q_emul",
+      "to": "n_E1p",
+      "name": "no",
+      "event": "no",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_32",
+      "from": "n_E1p",
+      "to": "n_E1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_33",
+      "from": "n_E2",
+      "to": "n_E1",
+      "name": "stop",
+      "event": "stop",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_34",
+      "from": "n_D1",
+      "to": "n_D2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_35",
+      "from": "n_D1",
+      "to": "n_N0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_36",
+      "from": "n_D1",
+      "to": "n_D1d",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_37",
+      "from": "n_D1d",
+      "to": "n_D1",
+      "name": "deleted",
+      "event": "deleted",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_38",
+      "from": "n_D1d",
+      "to": "n_D1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_nfc_new_39",
+      "from": "n_D2",
+      "to": "n_D1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    }
+  ]
+}

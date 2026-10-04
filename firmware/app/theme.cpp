@@ -28,6 +28,14 @@ const Slot kIconSlots[] = {
     {"wifi_setup", &assets::kIconWifiSetup, 12, 12},
     {"bluetooth_remote", &assets::kIconBluetoothRemote, 12, 12},
     {"settings", &assets::kIconSettings, 12, 12},
+    {"arrow1", &assets::kIconArrow, 8, 8},
+    {"pie1", &assets::kIconPie, 24, 24},
+    {"folder_new", &assets::kIconFolder, 10, 8},
+    {"plus_new", &assets::kIconPlus, 7, 7},
+    {"check_new", &assets::kIconCheck, 8, 8},
+    {"backspace_new", &assets::kIconBackspace, 11, 9},
+    {"lock_new", &assets::kIconLock, 8, 8},
+    {"status_dot_new", &assets::kIconDot, 6, 6},
 };
 
 const PicEntry kEmpty = {"", nullptr, 0, 0};
@@ -41,6 +49,13 @@ struct Loaded {
   Image splash;
   bool hasSplash = false;
   PicEntry splashE{};
+  Image wallpaper;
+  bool hasWallpaper = false;
+  PicEntry wallpaperE{};
+  Image loading;
+  bool hasLoading = false;
+  std::vector<const uint16_t*> loadingFrames;
+  GifEntry loadingE{};
   std::map<std::string, Image> icons;
   std::map<std::string, PicEntry> iconE;
 };
@@ -86,6 +101,37 @@ bool safeRelative(const std::string& p) {
 
 }  // namespace
 
+bool parseC16(const std::string& b, Image& out, std::string& err) {
+  if (b.size() < 14 || b.compare(0, 3, "C16") != 0) {
+    err = "not a .c16 image";
+    return false;
+  }
+  if ((uint8_t)b[3] != 1) {
+    err = "unsupported .c16 version " + std::to_string((uint8_t)b[3]);
+    return false;
+  }
+  out.w = u16(b, 4);
+  out.h = u16(b, 6);
+  out.frames = u16(b, 8);
+  out.delayMs = u16(b, 10);
+  const uint16_t key = u16(b, 12);
+  const size_t n = (size_t)out.w * out.h * out.frames;
+  if (out.w == 0 || out.h == 0 || out.frames == 0 || b.size() < 14 + n * 2) {
+    err = "truncated .c16 image";
+    return false;
+  }
+  out.px.resize(n);
+  for (size_t i = 0; i < n; i++) {
+    uint16_t c = u16(b, 14 + i * 2);
+    // the file's own key marks see-through pixels; a real pixel of the in-memory key colour is nudged
+    // off it (the Studio does the same at export) so it still shows
+    if (c == key) c = ui::color::kTransparent;
+    else if (c == ui::color::kTransparent) c = 0xF83F;
+    out.px[i] = c;
+  }
+  return true;
+}
+
 bool parseB1i(const std::string& b, Image& out, std::string& err) {
   if (b.size() < 12 || b.compare(0, 3, "B1I") != 0) {
     err = "not a .b1i image";
@@ -99,13 +145,26 @@ bool parseB1i(const std::string& b, Image& out, std::string& err) {
   out.h = u16(b, 6);
   out.frames = u16(b, 8);
   out.delayMs = u16(b, 10);
-  const size_t frameBytes = ((size_t)out.w * out.h + 7) / 8;
+  const size_t pixels = (size_t)out.w * out.h;
+  const size_t frameBytes = (pixels + 7) / 8;
   if (out.w == 0 || out.h == 0 || out.frames == 0 || b.size() < 12 + frameBytes * out.frames) {
     err = "truncated .b1i image";
     return false;
   }
-  out.data.assign(b.begin() + 12, b.begin() + 12 + (std::ptrdiff_t)(frameBytes * out.frames));
+  out.px.resize(pixels * out.frames);
+  for (size_t f = 0; f < out.frames; f++)
+    for (size_t i = 0; i < pixels; i++) {
+      const bool ink = ((uint8_t)b[12 + f * frameBytes + (i >> 3)] >> (i & 7)) & 1;
+      out.px[f * pixels + i] = ink ? ui::color::kWhite : ui::color::kTransparent;
+    }
   return true;
+}
+
+bool parseImage(const std::string& b, Image& out, std::string& err) {
+  if (b.compare(0, 3, "C16") == 0) return parseC16(b, out, err);
+  if (b.compare(0, 3, "B1I") == 0) return parseB1i(b, out, err);
+  err = "not a .c16 or .b1i image";
+  return false;
 }
 
 bool parseB1f(const std::string& b, Font& out, std::string& err) {
@@ -136,7 +195,9 @@ bool parseB1f(const std::string& b, Font& out, std::string& err) {
 
 const FontEntry& large() { return g && g->hasLarge ? g->largeE : assets::kFontLarge; }
 const FontEntry& small() { return g && g->hasSmall ? g->smallE : assets::kFontSmall; }
-const PicEntry& splash() { return g && g->hasSplash ? g->splashE : assets::kBootSplash; }
+const PicEntry* splash() { return g && g->hasSplash ? &g->splashE : nullptr; }
+const PicEntry* wallpaper() { return g && g->hasWallpaper ? &g->wallpaperE : nullptr; }
+const GifEntry& loading() { return g && g->hasLoading ? g->loadingE : assets::kAnimLoading; }
 
 const PicEntry& icon(const char* key) {
   if (g) {
@@ -211,7 +272,7 @@ std::unique_ptr<Loaded> read(const hal::Storage& storage, const std::string& nam
   auto loadImage = [&](const std::string& rel, uint16_t w, uint16_t h, Image& out) {
     std::string bytes, e2;
     if (!readFile(rel, bytes)) return false;
-    if (!parseB1i(bytes, out, e2)) {
+    if (!parseImage(bytes, out, e2)) {
       warnings.push_back(rel + ": " + e2);
       return false;
     }
@@ -225,11 +286,26 @@ std::unique_ptr<Loaded> read(const hal::Storage& storage, const std::string& nam
   auto splashIt = ini.find("theme.splash");
   if (splashIt != ini.end() && loadImage(splashIt->second, 128, 160, t->splash)) {
     t->hasSplash = true;
-    t->splashE = {"splash", t->splash.data.data(), t->splash.w, t->splash.h};
+    t->splashE = {"splash", t->splash.px.data(), t->splash.w, t->splash.h};
+  }
+  auto wallIt = ini.find("theme.wallpaper");
+  if (wallIt != ini.end() && loadImage(wallIt->second, 128, 137, t->wallpaper)) {
+    t->hasWallpaper = true;
+    t->wallpaperE = {"wallpaper", t->wallpaper.px.data(), t->wallpaper.w, t->wallpaper.h};
   }
   for (const auto& kv : ini) {
     if (kv.first.rfind("icons.", 0) != 0) continue;
     const std::string key = kv.first.substr(6);
+    if (key == "loading_gif1") {
+      if (loadImage(kv.second, 12, 12, t->loading)) {
+        t->hasLoading = true;
+        const size_t n = (size_t)t->loading.w * t->loading.h;
+        for (uint16_t f = 0; f < t->loading.frames; f++) t->loadingFrames.push_back(t->loading.px.data() + f * n);
+        t->loadingE = {"loading", t->loadingFrames.data(), (int)t->loading.frames,
+                       (unsigned long)(t->loading.delayMs ? t->loading.delayMs : 150), 12, 12};
+      }
+      continue;
+    }
     const Slot* slot = nullptr;
     for (const Slot& s : kIconSlots)
       if (key == s.key) slot = &s;
@@ -242,7 +318,7 @@ std::unique_ptr<Loaded> read(const hal::Storage& storage, const std::string& nam
     t->icons[key] = std::move(img);
   }
   // pointers into the map (key strings and pixel vectors) stay valid for as long as the theme is loaded
-  for (auto& kv : t->icons) t->iconE[kv.first] = {kv.first.c_str(), kv.second.data.data(), kv.second.w, kv.second.h};
+  for (auto& kv : t->icons) t->iconE[kv.first] = {kv.first.c_str(), kv.second.px.data(), kv.second.w, kv.second.h};
   return t;
 }
 

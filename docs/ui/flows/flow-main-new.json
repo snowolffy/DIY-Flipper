@@ -1,0 +1,821 @@
+{
+  "format": "flipper-ui-flow/2",
+  "schema": {
+    "about": "A UI flow of the DIY Flipper (128x160 screen) as a state machine. states = screens and internal decisions; transitions = what moves from one state to another. Import accepts this file back (Flows > Import). x / y are optional: states without them are laid out on a grid.",
+    "state": {
+      "id": "unique string",
+      "kind": "screen | internal (a firmware decision, no screen)",
+      "title": "string",
+      "note": "string",
+      "inputMode": "screens: normal | list | text (how the firmware treats the buttons on that screen)",
+      "start": "true on the one state the flow starts at",
+      "end": "true on a screen that is meant to have no way out",
+      "mockup": "screens: { id, name, file, template } of the linked asset (export only; import uses mockup.id)",
+      "x": "number, optional",
+      "y": "number, optional"
+    },
+    "transition": {
+      "id": "unique string",
+      "from": "state id",
+      "to": "state id",
+      "name": "free text label (event = same, for older readers)",
+      "note": "string",
+      "trigger": "null, or { type: 'button', held: null|button, button, gesture } | { type: 'timer', ms } | { type: 'system', event: systemEvents[].id }",
+      "transition": "{ type: cut | slide | push | fade, dir: left|right|up|down (slide/push: where things move), ms, easing: linear|ease-in|ease-out|ease-in-out }"
+    },
+    "buttons": "ok, cancel, left (<), right (>), power. There is no D-pad, no up/down, no touch.",
+    "gestures": "tap: on press, or on release (before hold_ms) when the same button also has a hold/repeat transition on that screen; hold: once at hold_ms; repeat: at hold_ms, then again faster and faster; release: on release, any duration. held: that button must already be down; when such a combo fires, the held button's own tap/release is skipped.",
+    "input": {
+      "hold_ms": 500,
+      "repeat_start_interval_ms": 200,
+      "repeat_accel": 0.8,
+      "repeat_min_interval_ms": 40,
+      "normal": "hold OK + < / > scrolls up / down",
+      "list": "< / > move the selection up / down (no need to hold OK); hold Cancel on a list item deletes it",
+      "text": "hold OK switches upper / lower case; hold Cancel cancels the input"
+    }
+  },
+  "name": "Main-new",
+  "systemEvents": [
+    {
+      "id": "nfc_card_found",
+      "name": "NFC card found"
+    },
+    {
+      "id": "sd_removed",
+      "name": "SD card removed"
+    },
+    {
+      "id": "sd_inserted",
+      "name": "SD card inserted"
+    },
+    {
+      "id": "battery_low",
+      "name": "Low battery"
+    },
+    {
+      "id": "battery_critical",
+      "name": "Battery critical"
+    },
+    {
+      "id": "ir_received",
+      "name": "IR signal received"
+    },
+    {
+      "id": "wifi_connected",
+      "name": "WiFi connected"
+    },
+    {
+      "id": "wifi_lost",
+      "name": "WiFi lost"
+    },
+    {
+      "id": "ble_connected",
+      "name": "BLE connected"
+    },
+    {
+      "id": "ble_disconnected",
+      "name": "BLE disconnected"
+    },
+    {
+      "id": "boot_done",
+      "name": "Boot checks done"
+    },
+    {
+      "id": "lockout_over",
+      "name": "Lockout over"
+    },
+    {
+      "id": "ir_learn_timeout",
+      "name": "IR learn timeout"
+    },
+    {
+      "id": "nfc_read_done",
+      "name": "NFC read done"
+    },
+    {
+      "id": "nfc_card_lost",
+      "name": "NFC card lost"
+    },
+    {
+      "id": "nfc_write_done",
+      "name": "NFC write done"
+    },
+    {
+      "id": "wifi_scan_done",
+      "name": "WiFi scan done"
+    },
+    {
+      "id": "wifi_connect_failed",
+      "name": "WiFi connect failed"
+    },
+    {
+      "id": "ble_pair_request",
+      "name": "BLE pair request"
+    },
+    {
+      "id": "pack_loaded",
+      "name": "Game pack loaded"
+    },
+    {
+      "id": "pack_failed",
+      "name": "Game pack failed"
+    },
+    {
+      "id": "app_failsafe",
+      "name": "App failsafe exit (Cancel held 3 s)"
+    }
+  ],
+  "states": [
+    {
+      "id": "n_M1",
+      "kind": "screen",
+      "title": "Boot status (POST)",
+      "note": "Self-check like an old PC POST. Ignores buttons except the emergency entry.",
+      "inputMode": "normal",
+      "start": true,
+      "mockup": {
+        "id": "pic69",
+        "name": "Main M1 Boot Status-new",
+        "file": "screens/main-m1-boot-status-new_pic69.png",
+        "missing": false,
+        "template": "tpl_full_new"
+      },
+      "x": 40,
+      "y": 40
+    },
+    {
+      "id": "n_M2",
+      "kind": "screen",
+      "title": "Boot logo + loading",
+      "note": "Shown 1-5 s on purpose (real boot is fast). Earlier note: fade to black before the next screen.",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic18",
+        "name": "Boot Load",
+        "file": "screens/boot-load_pic18.png",
+        "missing": false,
+        "template": "canvas"
+      },
+      "x": 280,
+      "y": 40
+    },
+    {
+      "id": "q_pinset",
+      "kind": "internal",
+      "title": "PIN set?",
+      "note": "",
+      "x": 520,
+      "y": 40
+    },
+    {
+      "id": "n_M3a",
+      "kind": "screen",
+      "title": "Lock screen (no PIN)",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic70",
+        "name": "Main M3a Lock Screen-new",
+        "file": "screens/main-m3a-lock-screen-new_pic70.png",
+        "missing": false,
+        "template": "tpl_lock_new"
+      },
+      "x": 760,
+      "y": 40
+    },
+    {
+      "id": "n_M3b",
+      "kind": "screen",
+      "title": "Lock screen (PIN)",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic71",
+        "name": "Main M3b Lock Screen PIN-new",
+        "file": "screens/main-m3b-lock-screen-pin-new_pic71.png",
+        "missing": false,
+        "template": "tpl_lock_new"
+      },
+      "x": 760,
+      "y": 160
+    },
+    {
+      "id": "n_M4a",
+      "kind": "screen",
+      "title": "Enter PIN",
+      "note": "< > turn the digit, OK confirms a digit, Cancel deletes. 6 digits, checked automatically.",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic72",
+        "name": "Main M4a PIN Entry-new",
+        "file": "screens/main-m4a-pin-entry-new_pic72.png",
+        "missing": false,
+        "template": "tpl_digit_new"
+      },
+      "x": 1000,
+      "y": 40
+    },
+    {
+      "id": "q_pinok",
+      "kind": "internal",
+      "title": "PIN correct?",
+      "note": "3 wrong tries -> lockout (time stacks, numbers TBD)",
+      "x": 1240,
+      "y": 40
+    },
+    {
+      "id": "n_M4b",
+      "kind": "screen",
+      "title": "Wrong PIN",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic73",
+        "name": "Main M4b PIN Wrong-new",
+        "file": "screens/main-m4b-pin-wrong-new_pic73.png",
+        "missing": false,
+        "template": "tpl_digit_new"
+      },
+      "x": 1480,
+      "y": 40
+    },
+    {
+      "id": "n_M4c",
+      "kind": "screen",
+      "title": "Locked out",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic74",
+        "name": "Main M4c Locked Out-new",
+        "file": "screens/main-m4c-locked-out-new_pic74.png",
+        "missing": false,
+        "template": "tpl_full_new"
+      },
+      "x": 1000,
+      "y": 160
+    },
+    {
+      "id": "n_M5",
+      "kind": "screen",
+      "title": "Home Screen",
+      "note": "Only Cancel does something here.",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic22",
+        "name": "Main menu mini",
+        "file": "screens/main-menu-mini_pic22.png",
+        "missing": false,
+        "template": "tpl_un8acw2"
+      },
+      "x": 1000,
+      "y": 280
+    },
+    {
+      "id": "n_M6a",
+      "kind": "screen",
+      "title": "Launcher",
+      "note": "Long names use marquee when selected.",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic75",
+        "name": "Main M6a Launcher-new",
+        "file": "screens/main-m6a-launcher-new_pic75.png",
+        "missing": false,
+        "template": "tpl_launcher_new"
+      },
+      "x": 1240,
+      "y": 160
+    },
+    {
+      "id": "n_M6b",
+      "kind": "screen",
+      "title": "Launcher (scrolled to end)",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic76",
+        "name": "Main M6b Launcher Scrolled-new",
+        "file": "screens/main-m6b-launcher-scrolled-new_pic76.png",
+        "missing": false,
+        "template": "tpl_launcher_new"
+      },
+      "x": 1480,
+      "y": 160
+    },
+    {
+      "id": "q_openmod",
+      "kind": "internal",
+      "title": "Open selected module",
+      "note": "Continues in that module's flow: IR-new, NFC-new, Games-new, WiFi-new, Bluetooth-new, Settings-new",
+      "x": 1480,
+      "y": 280
+    },
+    {
+      "id": "n_M7a",
+      "kind": "screen",
+      "title": "Emergency menu",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic77",
+        "name": "Main M7a Emergency Menu-new",
+        "file": "screens/main-m7a-emergency-menu-new_pic77.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 280,
+      "y": 160
+    },
+    {
+      "id": "n_M7b",
+      "kind": "screen",
+      "title": "Emergency code (8 digits)",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic78",
+        "name": "Main M7b Emergency Code-new",
+        "file": "screens/main-m7b-emergency-code-new_pic78.png",
+        "missing": false,
+        "template": "tpl_digit_new"
+      },
+      "x": 520,
+      "y": 160
+    },
+    {
+      "id": "q_codeok",
+      "kind": "internal",
+      "title": "Emergency code correct?",
+      "note": "Wrong tries count together with the Lock screen counter",
+      "x": 760,
+      "y": 280
+    }
+  ],
+  "transitions": [
+    {
+      "id": "e_flow_main_new_1",
+      "from": "n_M1",
+      "to": "n_M2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "boot_done"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_2",
+      "from": "n_M1",
+      "to": "n_M7a",
+      "name": "Emergency entry",
+      "event": "Emergency entry",
+      "note": "Or a special button combo (not decided yet)",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "power",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_3",
+      "from": "n_M2",
+      "to": "q_pinset",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "timer",
+        "ms": 3000
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 400,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "id": "e_flow_main_new_4",
+      "from": "q_pinset",
+      "to": "n_M3b",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_5",
+      "from": "q_pinset",
+      "to": "n_M3a",
+      "name": "no",
+      "event": "no",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_6",
+      "from": "n_M3a",
+      "to": "n_M5",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_main_new_7",
+      "from": "n_M3b",
+      "to": "n_M4a",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_8",
+      "from": "n_M4a",
+      "to": "q_pinok",
+      "name": "OK on the 6th digit",
+      "event": "OK on the 6th digit",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_9",
+      "from": "n_M4a",
+      "to": "n_M3b",
+      "name": "Cancel hold: back",
+      "event": "Cancel hold: back",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_10",
+      "from": "q_pinok",
+      "to": "n_M5",
+      "name": "correct",
+      "event": "correct",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_main_new_11",
+      "from": "q_pinok",
+      "to": "n_M4b",
+      "name": "wrong, tries left",
+      "event": "wrong, tries left",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_12",
+      "from": "q_pinok",
+      "to": "n_M4c",
+      "name": "wrong, no tries left",
+      "event": "wrong, no tries left",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_13",
+      "from": "n_M4b",
+      "to": "n_M4a",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "timer",
+        "ms": 1500
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_14",
+      "from": "n_M4c",
+      "to": "n_M3b",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "lockout_over"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_15",
+      "from": "n_M5",
+      "to": "n_M6a",
+      "name": "Menu tab slides up",
+      "event": "Menu tab slides up",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "slide",
+        "ms": 250,
+        "easing": "ease-out",
+        "dir": "up"
+      }
+    },
+    {
+      "id": "e_flow_main_new_16",
+      "from": "n_M6a",
+      "to": "n_M5",
+      "name": "Menu tab slides down",
+      "event": "Menu tab slides down",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "slide",
+        "ms": 250,
+        "easing": "ease-out",
+        "dir": "down"
+      }
+    },
+    {
+      "id": "e_flow_main_new_17",
+      "from": "n_M6a",
+      "to": "n_M6b",
+      "name": "scroll with < > (built-in list nav)",
+      "event": "scroll with < > (built-in list nav)",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_18",
+      "from": "n_M6b",
+      "to": "n_M5",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "slide",
+        "ms": 250,
+        "easing": "ease-out",
+        "dir": "down"
+      }
+    },
+    {
+      "id": "e_flow_main_new_19",
+      "from": "n_M6a",
+      "to": "q_openmod",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_20",
+      "from": "n_M6b",
+      "to": "q_openmod",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_21",
+      "from": "n_M7a",
+      "to": "n_M7b",
+      "name": "Reset PIN",
+      "event": "Reset PIN",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_22",
+      "from": "n_M7a",
+      "to": "n_M2",
+      "name": "Leave: continue booting",
+      "event": "Leave: continue booting",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_23",
+      "from": "n_M7b",
+      "to": "q_codeok",
+      "name": "OK on the 8th digit",
+      "event": "OK on the 8th digit",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_24",
+      "from": "n_M7b",
+      "to": "n_M7a",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_25",
+      "from": "q_codeok",
+      "to": "n_M2",
+      "name": "correct: PIN removed, continue boot",
+      "event": "correct: PIN removed, continue boot",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_26",
+      "from": "q_codeok",
+      "to": "n_M7b",
+      "name": "wrong",
+      "event": "wrong",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_main_new_27",
+      "from": "q_codeok",
+      "to": "n_M4c",
+      "name": "too many wrong",
+      "event": "too many wrong",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    }
+  ]
+}

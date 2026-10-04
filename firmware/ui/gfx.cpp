@@ -1,64 +1,80 @@
 #include "ui/gfx.h"
 
+#include <cctype>
 #include <cstring>
-#include <string>
 
 #include "platform/progmem.h"
 
 namespace ui {
 
-void drawBits(Framebuffer& fb, int16_t x, int16_t y, const uint8_t* data, uint16_t w, uint16_t h, bool ink,
-              int16_t clipRight) {
-  for (uint16_t yy = 0; yy < h; yy++) {
+void drawMask(Framebuffer& fb, int16_t x, int16_t y, const uint8_t* data, uint16_t w, uint16_t h, Color c,
+              int scale) {
+  for (uint16_t yy = 0; yy < h; yy++)
     for (uint16_t xx = 0; xx < w; xx++) {
-      if (x + xx >= clipRight) break;
       const uint32_t idx = (uint32_t)yy * w + xx;
-      if (progmemByte(data + (idx >> 3)) & (1u << (idx & 7))) fb.set(x + xx, y + yy, ink);
+      if (!(progmemByte(data + (idx >> 3)) & (1u << (idx & 7)))) continue;
+      if (scale == 1) fb.set((int16_t)(x + xx), (int16_t)(y + yy), c);
+      else fb.fillRect((int16_t)(x + xx * scale), (int16_t)(y + yy * scale), (int16_t)scale, (int16_t)scale, c);
     }
-  }
 }
 
-void drawPic(Framebuffer& fb, int16_t x, int16_t y, const PicEntry& p, bool ink) {
-  drawBits(fb, x, y, p.data, p.w, p.h, ink);
+namespace {
+
+void blit(Framebuffer& fb, int16_t x, int16_t y, const uint16_t* data, uint16_t w, uint16_t h, bool tint,
+          Color white, int scale) {
+  if (!data) return;
+  for (uint16_t yy = 0; yy < h; yy++)
+    for (uint16_t xx = 0; xx < w; xx++) {
+      Color c = progmemWord(data + (uint32_t)yy * w + xx);
+      if (c == color::kTransparent) continue;
+      if (tint && c == color::kWhite) c = white;
+      if (scale == 1) fb.set((int16_t)(x + xx), (int16_t)(y + yy), c);
+      else fb.fillRect((int16_t)(x + xx * scale), (int16_t)(y + yy * scale), (int16_t)scale, (int16_t)scale, c);
+    }
 }
 
-int16_t drawText(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, const char* s, bool ink,
-                 int16_t clipRight) {
+const char* glyphFor(const FontEntry& f, char ch) {
+  if (ch == 0) return nullptr;
+  const char* hit = std::strchr(f.charset, ch);
+  if (!hit && std::islower((unsigned char)ch)) hit = std::strchr(f.charset, std::toupper((unsigned char)ch));
+  return hit;
+}
+
+}  // namespace
+
+void drawPic(Framebuffer& fb, int16_t x, int16_t y, const PicEntry& p, int scale) {
+  blit(fb, x, y, p.data, p.w, p.h, false, 0, scale);
+}
+
+void drawPicTinted(Framebuffer& fb, int16_t x, int16_t y, const PicEntry& p, Color white, int scale) {
+  blit(fb, x, y, p.data, p.w, p.h, true, white, scale);
+}
+
+void drawGifFrame(Framebuffer& fb, int16_t x, int16_t y, const GifEntry& g, int frame) {
+  if (g.frameCount <= 0) return;
+  blit(fb, x, y, g.frames[frame % g.frameCount], g.w, g.h, false, 0, 1);
+}
+
+int16_t drawText(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, const char* s, Color c, int scale) {
   const uint16_t bytesPerGlyph = (uint16_t)((f.w * f.h + 7) / 8);
-  for (; *s; s++, x += f.w) {
-    if (x >= clipRight) break;
-    const char* hit = std::strchr(f.charset, *s);
-    if (hit) drawBits(fb, x, y, f.glyphs + (hit - f.charset) * bytesPerGlyph, f.w, f.h, ink, clipRight);
+  for (; *s; s++, x = (int16_t)(x + f.w * scale)) {
+    const char* hit = glyphFor(f, *s);
+    if (hit) drawMask(fb, x, y, f.glyphs + (hit - f.charset) * bytesPerGlyph, f.w, f.h, c, scale);
   }
   return x;
 }
 
-int16_t drawTextRight(Framebuffer& fb, const FontEntry& f, int16_t right, int16_t y, const char* s, bool ink) {
-  return drawText(fb, f, right - textWidth(f, s), y, s, ink);
+int16_t textWidth(const FontEntry& f, const char* s, int scale) {
+  return (int16_t)(std::strlen(s) * f.w * scale);
 }
 
-int16_t textWidth(const FontEntry& f, const char* s) { return (int16_t)(std::strlen(s) * f.w); }
+void drawTextCentered(Framebuffer& fb, const FontEntry& f, int16_t y, const char* s, Color c, int16_t x0,
+                      int16_t w, int scale) {
+  drawText(fb, f, centerIn(x0, w, textWidth(f, s, scale)), y, s, c, scale);
+}
 
-int16_t drawWrapped(Framebuffer& fb, const FontEntry& f, int16_t x, int16_t y, int16_t width, int16_t lineH,
-                    const char* s, bool ink) {
-  const size_t perLine = width / f.w > 0 ? (size_t)(width / f.w) : 1;
-  std::string text(s);
-  size_t pos = 0;
-  while (pos < text.size()) {
-    while (pos < text.size() && text[pos] == ' ') pos++;
-    if (pos >= text.size()) break;
-    size_t end = pos + perLine;
-    if (end >= text.size()) {
-      end = text.size();
-    } else {
-      const size_t space = text.rfind(' ', end);
-      if (space != std::string::npos && space > pos) end = space;  // break at the last space that fits
-    }
-    drawText(fb, f, x, y, text.substr(pos, end - pos).c_str(), ink);
-    y += lineH;
-    pos = end;
-  }
-  return y;
+void drawTextRight(Framebuffer& fb, const FontEntry& f, int16_t right, int16_t y, const char* s, Color c) {
+  drawText(fb, f, (int16_t)(right - textWidth(f, s)), y, s, c);
 }
 
 }  // namespace ui

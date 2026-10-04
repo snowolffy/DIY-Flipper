@@ -1,0 +1,1260 @@
+{
+  "format": "flipper-ui-flow/2",
+  "schema": {
+    "about": "A UI flow of the DIY Flipper (128x160 screen) as a state machine. states = screens and internal decisions; transitions = what moves from one state to another. Import accepts this file back (Flows > Import). x / y are optional: states without them are laid out on a grid.",
+    "state": {
+      "id": "unique string",
+      "kind": "screen | internal (a firmware decision, no screen)",
+      "title": "string",
+      "note": "string",
+      "inputMode": "screens: normal | list | text (how the firmware treats the buttons on that screen)",
+      "start": "true on the one state the flow starts at",
+      "end": "true on a screen that is meant to have no way out",
+      "mockup": "screens: { id, name, file, template } of the linked asset (export only; import uses mockup.id)",
+      "x": "number, optional",
+      "y": "number, optional"
+    },
+    "transition": {
+      "id": "unique string",
+      "from": "state id",
+      "to": "state id",
+      "name": "free text label (event = same, for older readers)",
+      "note": "string",
+      "trigger": "null, or { type: 'button', held: null|button, button, gesture } | { type: 'timer', ms } | { type: 'system', event: systemEvents[].id }",
+      "transition": "{ type: cut | slide | push | fade, dir: left|right|up|down (slide/push: where things move), ms, easing: linear|ease-in|ease-out|ease-in-out }"
+    },
+    "buttons": "ok, cancel, left (<), right (>), power. There is no D-pad, no up/down, no touch.",
+    "gestures": "tap: on press, or on release (before hold_ms) when the same button also has a hold/repeat transition on that screen; hold: once at hold_ms; repeat: at hold_ms, then again faster and faster; release: on release, any duration. held: that button must already be down; when such a combo fires, the held button's own tap/release is skipped.",
+    "input": {
+      "hold_ms": 500,
+      "repeat_start_interval_ms": 200,
+      "repeat_accel": 0.8,
+      "repeat_min_interval_ms": 40,
+      "normal": "hold OK + < / > scrolls up / down",
+      "list": "< / > move the selection up / down (no need to hold OK); hold Cancel on a list item deletes it",
+      "text": "hold OK switches upper / lower case; hold Cancel cancels the input"
+    }
+  },
+  "name": "IR-new",
+  "systemEvents": [
+    {
+      "id": "nfc_card_found",
+      "name": "NFC card found"
+    },
+    {
+      "id": "sd_removed",
+      "name": "SD card removed"
+    },
+    {
+      "id": "sd_inserted",
+      "name": "SD card inserted"
+    },
+    {
+      "id": "battery_low",
+      "name": "Low battery"
+    },
+    {
+      "id": "battery_critical",
+      "name": "Battery critical"
+    },
+    {
+      "id": "ir_received",
+      "name": "IR signal received"
+    },
+    {
+      "id": "wifi_connected",
+      "name": "WiFi connected"
+    },
+    {
+      "id": "wifi_lost",
+      "name": "WiFi lost"
+    },
+    {
+      "id": "ble_connected",
+      "name": "BLE connected"
+    },
+    {
+      "id": "ble_disconnected",
+      "name": "BLE disconnected"
+    },
+    {
+      "id": "boot_done",
+      "name": "Boot checks done"
+    },
+    {
+      "id": "lockout_over",
+      "name": "Lockout over"
+    },
+    {
+      "id": "ir_learn_timeout",
+      "name": "IR learn timeout"
+    },
+    {
+      "id": "nfc_read_done",
+      "name": "NFC read done"
+    },
+    {
+      "id": "nfc_card_lost",
+      "name": "NFC card lost"
+    },
+    {
+      "id": "nfc_write_done",
+      "name": "NFC write done"
+    },
+    {
+      "id": "wifi_scan_done",
+      "name": "WiFi scan done"
+    },
+    {
+      "id": "wifi_connect_failed",
+      "name": "WiFi connect failed"
+    },
+    {
+      "id": "ble_pair_request",
+      "name": "BLE pair request"
+    },
+    {
+      "id": "pack_loaded",
+      "name": "Game pack loaded"
+    },
+    {
+      "id": "pack_failed",
+      "name": "Game pack failed"
+    },
+    {
+      "id": "app_failsafe",
+      "name": "App failsafe exit (Cancel held 3 s)"
+    }
+  ],
+  "states": [
+    {
+      "id": "n_I0",
+      "kind": "screen",
+      "title": "IR Menu",
+      "note": "",
+      "inputMode": "list",
+      "start": true,
+      "mockup": {
+        "id": "pic40",
+        "name": "IR I0 IR Menu-new",
+        "file": "screens/ir-i0-ir-menu-new_pic40.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 40,
+      "y": 40
+    },
+    {
+      "id": "n_launcher",
+      "kind": "screen",
+      "title": "Launcher (back)",
+      "note": "Leave this flow: back to the Launcher",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic75",
+        "name": "Main M6a Launcher-new",
+        "file": "screens/main-m6a-launcher-new_pic75.png",
+        "missing": false,
+        "template": "tpl_launcher_new"
+      },
+      "x": 280,
+      "y": 40
+    },
+    {
+      "id": "q_anycat",
+      "kind": "internal",
+      "title": "Any categories?",
+      "note": "",
+      "x": 280,
+      "y": 160
+    },
+    {
+      "id": "n_S1",
+      "kind": "screen",
+      "title": "Send: categories",
+      "note": "Cancel hold opens the category menu (rename/delete).",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic41",
+        "name": "IR S1 Send Categories-new",
+        "file": "screens/ir-s1-send-categories-new_pic41.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 520,
+      "y": 40
+    },
+    {
+      "id": "n_S1_0",
+      "kind": "screen",
+      "title": "Send: no categories",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic42",
+        "name": "IR S1-0 Send Categories Empty-new",
+        "file": "screens/ir-s1-0-send-categories-empty-new_pic42.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 520,
+      "y": 160
+    },
+    {
+      "id": "n_S1a",
+      "kind": "screen",
+      "title": "Category menu",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic43",
+        "name": "IR S1a Category Menu-new",
+        "file": "screens/ir-s1a-category-menu-new_pic43.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 760,
+      "y": 40
+    },
+    {
+      "id": "n_S1b",
+      "kind": "screen",
+      "title": "Rename category",
+      "note": "Name already exists -> message, keep editing",
+      "inputMode": "text",
+      "mockup": {
+        "id": "pic44",
+        "name": "IR S1b Rename Category-new",
+        "file": "screens/ir-s1b-rename-category-new_pic44.png",
+        "missing": false,
+        "template": "tpl_input_new"
+      },
+      "x": 1000,
+      "y": 40
+    },
+    {
+      "id": "n_S1c",
+      "kind": "screen",
+      "title": "Delete category?",
+      "note": "Deletes every signal inside too; empty category shows \"Delete <name>?\"",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic45",
+        "name": "IR S1c Delete Category-new",
+        "file": "screens/ir-s1c-delete-category-new_pic45.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1000,
+      "y": 160
+    },
+    {
+      "id": "q_anysig",
+      "kind": "internal",
+      "title": "Category has signals?",
+      "note": "",
+      "x": 760,
+      "y": 160
+    },
+    {
+      "id": "n_S2",
+      "kind": "screen",
+      "title": "Send: signals",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic46",
+        "name": "IR S2 Send Signals-new",
+        "file": "screens/ir-s2-send-signals-new_pic46.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1000,
+      "y": 280
+    },
+    {
+      "id": "n_S2_0",
+      "kind": "screen",
+      "title": "Signals: empty",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic47",
+        "name": "IR S2-0 Signals Empty-new",
+        "file": "screens/ir-s2-0-signals-empty-new_pic47.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1000,
+      "y": 400
+    },
+    {
+      "id": "n_S2t",
+      "kind": "screen",
+      "title": "Signal sent",
+      "note": "Toast + confirm beep, stays on the list",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic48",
+        "name": "IR S2t Signal Sent-new",
+        "file": "screens/ir-s2t-signal-sent-new_pic48.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1240,
+      "y": 40
+    },
+    {
+      "id": "n_S3",
+      "kind": "screen",
+      "title": "Delete signal?",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic49",
+        "name": "IR S3 Delete Signal-new",
+        "file": "screens/ir-s3-delete-signal-new_pic49.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1240,
+      "y": 160
+    },
+    {
+      "id": "n_L1",
+      "kind": "screen",
+      "title": "Learn: waiting",
+      "note": "RMT RX on only while here; timeout ~15 s",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic50",
+        "name": "IR L1 Learn Waiting-new",
+        "file": "screens/ir-l1-learn-waiting-new_pic50.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 280,
+      "y": 280
+    },
+    {
+      "id": "q_decoded",
+      "kind": "internal",
+      "title": "Protocol decoded?",
+      "note": "",
+      "x": 520,
+      "y": 280
+    },
+    {
+      "id": "n_L1b",
+      "kind": "screen",
+      "title": "Learn: no signal",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic51",
+        "name": "IR L1b Learn No Signal-new",
+        "file": "screens/ir-l1b-learn-no-signal-new_pic51.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 520,
+      "y": 400
+    },
+    {
+      "id": "n_L2a",
+      "kind": "screen",
+      "title": "Captured (decoded)",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic52",
+        "name": "IR L2a Captured Decoded-new",
+        "file": "screens/ir-l2a-captured-decoded-new_pic52.png",
+        "missing": false,
+        "template": "tpl_detail_new"
+      },
+      "x": 760,
+      "y": 280
+    },
+    {
+      "id": "n_L2b",
+      "kind": "screen",
+      "title": "Captured (RAW)",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic53",
+        "name": "IR L2b Captured Raw-new",
+        "file": "screens/ir-l2b-captured-raw-new_pic53.png",
+        "missing": false,
+        "template": "tpl_detail_new"
+      },
+      "x": 760,
+      "y": 400
+    },
+    {
+      "id": "n_L3",
+      "kind": "screen",
+      "title": "Name the signal",
+      "note": "",
+      "inputMode": "text",
+      "mockup": {
+        "id": "pic54",
+        "name": "IR L3 Name Signal-new",
+        "file": "screens/ir-l3-name-signal-new_pic54.png",
+        "missing": false,
+        "template": "tpl_input_new"
+      },
+      "x": 1000,
+      "y": 520
+    },
+    {
+      "id": "n_L4",
+      "kind": "screen",
+      "title": "Pick category",
+      "note": "",
+      "inputMode": "list",
+      "mockup": {
+        "id": "pic55",
+        "name": "IR L4 Pick Category-new",
+        "file": "screens/ir-l4-pick-category-new_pic55.png",
+        "missing": false,
+        "template": "tpl_list_new"
+      },
+      "x": 1240,
+      "y": 280
+    },
+    {
+      "id": "n_L4n",
+      "kind": "screen",
+      "title": "New category name",
+      "note": "",
+      "inputMode": "text",
+      "mockup": {
+        "id": "pic141",
+        "name": "Tpl TP1 Text Input-new",
+        "file": "screens/tpl-tp1-text-input-new_pic141.png",
+        "missing": false,
+        "template": "tpl_input_new"
+      },
+      "x": 1480,
+      "y": 40
+    },
+    {
+      "id": "n_L5",
+      "kind": "screen",
+      "title": "Saved",
+      "note": "",
+      "inputMode": "normal",
+      "mockup": {
+        "id": "pic56",
+        "name": "IR L5 Saved-new",
+        "file": "screens/ir-l5-saved-new_pic56.png",
+        "missing": false,
+        "template": "tpl_message_new"
+      },
+      "x": 1480,
+      "y": 160
+    }
+  ],
+  "transitions": [
+    {
+      "id": "e_flow_ir_new_1",
+      "from": "n_I0",
+      "to": "q_anycat",
+      "name": "Send",
+      "event": "Send",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_2",
+      "from": "n_I0",
+      "to": "n_L1",
+      "name": "Learn",
+      "event": "Learn",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_3",
+      "from": "n_I0",
+      "to": "n_launcher",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_4",
+      "from": "q_anycat",
+      "to": "n_S1",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_5",
+      "from": "q_anycat",
+      "to": "n_S1_0",
+      "name": "no",
+      "event": "no",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_6",
+      "from": "n_S1_0",
+      "to": "n_I0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_7",
+      "from": "n_S1",
+      "to": "q_anysig",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_8",
+      "from": "n_S1",
+      "to": "n_I0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_9",
+      "from": "n_S1",
+      "to": "n_S1a",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_10",
+      "from": "n_S1a",
+      "to": "n_S1b",
+      "name": "Rename",
+      "event": "Rename",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_11",
+      "from": "n_S1a",
+      "to": "n_S1c",
+      "name": "Delete",
+      "event": "Delete",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_12",
+      "from": "n_S1a",
+      "to": "n_S1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_13",
+      "from": "n_S1b",
+      "to": "n_S1",
+      "name": "OK on the check slot: save",
+      "event": "OK on the check slot: save",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_14",
+      "from": "n_S1b",
+      "to": "n_S1",
+      "name": "cancel rename",
+      "event": "cancel rename",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_15",
+      "from": "n_S1c",
+      "to": "n_S1",
+      "name": "deleted",
+      "event": "deleted",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_16",
+      "from": "n_S1c",
+      "to": "n_S1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_17",
+      "from": "q_anysig",
+      "to": "n_S2",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_18",
+      "from": "q_anysig",
+      "to": "n_S2_0",
+      "name": "no",
+      "event": "no",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_19",
+      "from": "n_S2_0",
+      "to": "n_S1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_20",
+      "from": "n_S2",
+      "to": "n_S2t",
+      "name": "send now",
+      "event": "send now",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_21",
+      "from": "n_S2",
+      "to": "n_S1",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_22",
+      "from": "n_S2",
+      "to": "n_S3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "fade",
+        "ms": 150,
+        "easing": "ease-out"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_23",
+      "from": "n_S2t",
+      "to": "n_S2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "timer",
+        "ms": 1000
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_24",
+      "from": "n_S3",
+      "to": "n_S2",
+      "name": "deleted",
+      "event": "deleted",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_25",
+      "from": "n_S3",
+      "to": "n_S2",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_26",
+      "from": "n_L1",
+      "to": "q_decoded",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "ir_received"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_27",
+      "from": "n_L1",
+      "to": "n_L1b",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "system",
+        "event": "ir_learn_timeout"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_28",
+      "from": "n_L1",
+      "to": "n_I0",
+      "name": "RX off",
+      "event": "RX off",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_29",
+      "from": "q_decoded",
+      "to": "n_L2a",
+      "name": "yes",
+      "event": "yes",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_30",
+      "from": "q_decoded",
+      "to": "n_L2b",
+      "name": "no (RAW)",
+      "event": "no (RAW)",
+      "note": "",
+      "trigger": null,
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_31",
+      "from": "n_L1b",
+      "to": "n_L1",
+      "name": "retry",
+      "event": "retry",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_32",
+      "from": "n_L1b",
+      "to": "n_I0",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_33",
+      "from": "n_L2a",
+      "to": "n_L3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_34",
+      "from": "n_L2a",
+      "to": "n_L1",
+      "name": "discard",
+      "event": "discard",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_35",
+      "from": "n_L2b",
+      "to": "n_L3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_36",
+      "from": "n_L2b",
+      "to": "n_L1",
+      "name": "discard",
+      "event": "discard",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_37",
+      "from": "n_L3",
+      "to": "n_L4",
+      "name": "OK on the check slot",
+      "event": "OK on the check slot",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_38",
+      "from": "n_L3",
+      "to": "n_L1",
+      "name": "cancel: discard signal",
+      "event": "cancel: discard signal",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_39",
+      "from": "n_L4",
+      "to": "n_L5",
+      "name": "existing category",
+      "event": "existing category",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_40",
+      "from": "n_L4",
+      "to": "n_L4n",
+      "name": "New category",
+      "event": "New category",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_41",
+      "from": "n_L4",
+      "to": "n_L3",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_42",
+      "from": "n_L4n",
+      "to": "n_L5",
+      "name": "OK on the check slot",
+      "event": "OK on the check slot",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "ok",
+        "gesture": "tap"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_43",
+      "from": "n_L4n",
+      "to": "n_L4",
+      "name": "",
+      "event": "",
+      "note": "",
+      "trigger": {
+        "type": "button",
+        "held": null,
+        "button": "cancel",
+        "gesture": "hold"
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    },
+    {
+      "id": "e_flow_ir_new_44",
+      "from": "n_L5",
+      "to": "n_L1",
+      "name": "learn the next button",
+      "event": "learn the next button",
+      "note": "",
+      "trigger": {
+        "type": "timer",
+        "ms": 1200
+      },
+      "transition": {
+        "type": "cut",
+        "ms": 0,
+        "easing": "linear"
+      }
+    }
+  ]
+}

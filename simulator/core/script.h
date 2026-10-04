@@ -1,6 +1,7 @@
 // script.h - JSON mock-scripts: seed a starting state, fire timed events, check assertions. The same
-// parsed script runs headless (runScript, on a fresh copy of storage) or inside the live window
-// (ScriptPlayer, on the running simulator), because every event goes through the mocks' own setters.
+// parsed script runs headless (`sim run`, on a fresh copy of storage) or inside a live session, because
+// every event except the checks is a command (core/commands.h) - the same vocabulary as the terminal and
+// the window's command log.
 //
 // {
 //   "name": "boot-to-settings",
@@ -8,34 +9,25 @@
 //                      "storage_seed": "seeds/some-folder", "cold_boot": true },
 //   "events": [
 //     { "t_ms": 0,    "type": "button", "button": "OK", "action": "press" },
-//     { "t_ms": 900,  "type": "assert", "check": "menu_path_equals", "value": "Main" }
+//     { "t_ms": 900,  "type": "assert", "check": "screen_equals", "value": "M5" }
 //   ]
 // }
 //
-// Event types
-//   button     button: OK|CANCEL|LEFT|RIGHT|POWER, action: press (80 ms tap) | hold (duration_ms, default 800)
-//              | down | up
-//   battery    percent: 0-100, or "unknown" for no ADC reading
-//   rtc        time: ISO date-time, or missing: true
-//   sd         present: true|false
-//   storage    fail_writes: true|false
-//   ir_signal  protocol: NEC|Samsung|Sony|RC5|RAW, address, command (numbers or "0x.." strings), raw: [us, ...]
-//   nfc_card   action: present|remove, uid, card_type, blocks: ["hex", ...]
-//   wifi       any of: networks: [{ssid, rssi, secured}], next_connect_succeeds: bool, latency_ms
-//   ble_host   action: connect|disconnect, name
-//   ble_bonds  full: true|false (fill the bond list with placeholder devices, or clear them)
-//   import     file: path relative to the project folder (.b1i, .b1f or theme .zip), as Import Asset does
-//   restart    cold_boot: true|false (default true) - power-cycle the device
-//   dump       path: where to write the current screen as a .pbm
+// Event types: every command in core/commands.h (button press/hold become down + up at t + duration),
+// plus
 //   assert     check + fields:
-//                menu_path_equals          value
-//                framebuffer_hash_equals   value (16 hex digits, what the runner prints as fb_hash)
+//                menu_path_equals          value ("Home/Menu/Settings")
+//                screen_equals             value (mockup code of the top screen: "M5", "S2", "B-M0")
+//                framebuffer_hash_equals   value (16 hex digits, what `sim run` prints as fb_hash)
 //                storage_file_exists       path ("sd:/..." or "flash:/...")
 //                storage_file_missing      path
 //                storage_file_contains     path, text
-//                state_equals              field, value. Fields: invert, battery_percent, sd_present,
-//                                          ir_listening, ir_sent_count, nfc_polling, wifi_state, wifi_ssid,
-//                                          wifi_password, ble_state, ble_host, ble_keys_sent, theme
+//                state_equals              field (dotted path into `sim state --json`, e.g. "wifi.state",
+//                                          "ble.keys_sent", "buzzer.tones", "power.state"), value
+//                event_fired               value (system event id, e.g. "nfc_card_found", among the
+//                                          last 16 fired)
+//                display_static_ms         value: no display push in the last value ms (a still screen
+//                                          must not be re-sent)
 #pragma once
 
 #include <filesystem>
@@ -44,6 +36,7 @@
 #include <string>
 #include <vector>
 
+#include "core/commands.h"
 #include "core/simulator.h"
 
 namespace sim {
@@ -66,7 +59,7 @@ struct InitialState {
 
 struct ScriptAction {
   uint32_t t;
-  std::function<void(Simulator&, std::vector<AssertResult>&)> run;
+  std::function<void(CmdContext&, std::vector<AssertResult>&)> run;
 };
 
 struct Script {
@@ -86,12 +79,16 @@ void applyInitialState(const InitialState& init, Simulator& s);
 bool copySeed(const std::filesystem::path& projectDir, const std::string& seed,
               const std::filesystem::path& storageRoot, std::string& err);
 
-// Plays a loaded script against a simulator that is already running; times are relative to start().
+// A fresh copy of <project>/storage (+ seed) in a temp folder. Empty path on error.
+std::filesystem::path makeRunStorage(const std::filesystem::path& projectDir, const std::string& seed,
+                                     std::string& err);
+
+// Plays a loaded script against a running session; times are relative to start().
 class ScriptPlayer {
  public:
   void start(Script script, uint32_t now);
   // Runs every action due up to virtual time t, advancing the simulator to each action's time first.
-  void runUntil(Simulator& s, uint32_t t);
+  void runUntil(CmdContext& ctx, uint32_t t);
   bool active() const { return active_; }
   bool finished() const { return active_ && next_ >= script_.actions.size(); }
   const Script& script() const { return script_; }
@@ -111,8 +108,7 @@ struct ScriptResult {
   bool loaded = false;
   std::string error;  // parse / setup problem; the script didn't run
   std::vector<AssertResult> asserts;
-  std::string finalMenuPath;
-  std::string finalHash;
+  std::string finalMenuPath, finalScreen, finalHash;
   uint32_t endMs = 0;
 
   bool passed() const {
@@ -125,7 +121,7 @@ struct ScriptResult {
 
 struct RunOptions {
   std::filesystem::path projectDir;  // holds storage/ (copied per run) and seed folders
-  std::filesystem::path dumpFinal;   // optional .pbm of the last frame
+  std::filesystem::path shotFinal;   // optional PNG of the last frame
   bool keepStorage = false;          // leave the per-run storage copy on disk and print its path
 };
 
