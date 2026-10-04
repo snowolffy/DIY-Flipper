@@ -1,0 +1,28 @@
+{
+ "name": "display-static",
+ "about": "a still screen is not pushed again; a clock tick pushes only the status bar",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 5650
+  },
+  {
+   "type": "assert",
+   "check": "display_static_ms",
+   "value": 1000,
+   "t_ms": 7150
+  }
+ ]
+}

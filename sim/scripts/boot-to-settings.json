@@ -1,74 +1,101 @@
 {
-  "name": "boot-to-settings",
-  "initial_state": {
-    "battery_percent": 80,
-    "rtc": "2026-09-30T12:45:00"
+ "name": "boot-to-settings",
+ "about": "cold boot to the Settings menu; the frame hash locks the colour rendering",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3a",
+   "t_ms": 5300
   },
-  "events": [
-    {
-      "t_ms": 300,
-      "type": "assert",
-      "check": "menu_path_equals",
-      "value": "Splash"
-    },
-    {
-      "t_ms": 1600,
-      "type": "assert",
-      "check": "menu_path_equals",
-      "value": "Main"
-    },
-    {
-      "t_ms": 1700,
-      "type": "button",
-      "button": "RIGHT"
-    },
-    {
-      "t_ms": 1800,
-      "type": "button",
-      "button": "RIGHT"
-    },
-    {
-      "t_ms": 1900,
-      "type": "button",
-      "button": "RIGHT"
-    },
-    {
-      "t_ms": 2000,
-      "type": "button",
-      "button": "RIGHT"
-    },
-    {
-      "t_ms": 2100,
-      "type": "button",
-      "button": "RIGHT"
-    },
-    {
-      "t_ms": 2300,
-      "type": "button",
-      "button": "OK"
-    },
-    {
-      "t_ms": 2500,
-      "type": "assert",
-      "check": "menu_path_equals",
-      "value": "Main/Settings"
-    },
-    {
-      "t_ms": 2500,
-      "type": "assert",
-      "check": "framebuffer_hash_equals",
-      "value": "2e55045db62ee172"
-    },
-    {
-      "t_ms": 2600,
-      "type": "button",
-      "button": "CANCEL"
-    },
-    {
-      "t_ms": 2800,
-      "type": "assert",
-      "check": "menu_path_equals",
-      "value": "Main"
-    }
-  ]
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 5650
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6700
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6850
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "T0",
+   "t_ms": 7000
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "menu_path",
+   "value": "Home/Menu/Settings",
+   "t_ms": 7000
+  },
+  {
+   "type": "assert",
+   "check": "framebuffer_hash_equals",
+   "value": "591d81816f1b8755",
+   "t_ms": 7000
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 7000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6b",
+   "t_ms": 7150
+  }
+ ]
 }

@@ -1,338 +1,53 @@
 {
- "name": "wifi-connect",
- "about": "connect to a secured network and get the time by NTP",
+ "name": "system-events",
+ "about": "the flows' shared event catalog: SD out/in, battery low/critical, WiFi lost",
  "initial_state": {
   "battery_percent": 100,
   "rtc": "2026-10-03T12:34:00"
  },
  "events": [
   {
-   "type": "rtc",
-   "time": "2026-01-01T00:00:00",
-   "t_ms": 5300
-  },
-  {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 5350
+   "t_ms": 5300
+  },
+  {
+   "type": "sd",
+   "present": false,
+   "t_ms": 5650
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "sd_removed",
+   "t_ms": 5750
+  },
+  {
+   "type": "sd",
+   "present": true,
+   "t_ms": 5750
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "sd_inserted",
+   "t_ms": 5850
+  },
+  {
+   "type": "battery",
+   "percent": 12,
+   "t_ms": 5850
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "battery_low",
+   "t_ms": 14900
   },
   {
    "type": "button",
    "button": "CANCEL",
-   "action": "press",
-   "t_ms": 5500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5650
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5950
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 6100
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 6250
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 7300
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "hold",
-   "duration_ms": 700,
-   "t_ms": 7450
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8300
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8450
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8600
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8750
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8900
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9050
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9200
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9350
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9650
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 10100
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 10250
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 10400
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 10550
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 10700
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 10850
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11000
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11150
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11300
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11450
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11600
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11750
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11900
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12050
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12200
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12350
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12500
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12650
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12800
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 12950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13100
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13250
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13400
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13550
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13700
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 13850
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14000
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14150
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14300
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14450
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14600
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 14750
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
    "action": "press",
    "t_ms": 14900
   },
@@ -356,13 +71,13 @@
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15500
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15650
   },
@@ -370,159 +85,338 @@
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 15800
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 15950
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 16100
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 16250
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 16400
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 16550
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
    "t_ms": 16700
   },
   {
    "type": "button",
-   "button": "LEFT",
-   "action": "press",
+   "button": "OK",
+   "action": "hold",
+   "duration_ms": 700,
    "t_ms": 16850
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17000
+   "t_ms": 17700
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17150
+   "t_ms": 17850
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17300
+   "t_ms": 18000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17450
+   "t_ms": 18150
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17600
+   "t_ms": 18300
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17750
+   "t_ms": 18450
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 17900
+   "t_ms": 18600
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18050
+   "t_ms": 18750
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18200
+   "t_ms": 18900
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18350
+   "t_ms": 19050
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18500
+   "t_ms": 19200
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18650
+   "t_ms": 19350
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 18800
+   "t_ms": 19500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 19650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 19800
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 18950
+   "t_ms": 19950
   },
   {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "C6a",
-   "t_ms": 20000
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20100
   },
   {
-   "type": "assert",
-   "check": "state_equals",
-   "field": "wifi.ssid",
-   "value": "HomeNet",
-   "t_ms": 20000
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20250
   },
   {
-   "type": "assert",
-   "check": "state_equals",
-   "field": "wifi.password",
-   "value": "pass",
-   "t_ms": 20000
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20400
   },
   {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "F0",
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 20850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 21000
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 21150
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 21300
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 21450
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
    "t_ms": 21600
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 21750
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 21900
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22050
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22200
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22350
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22500
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22650
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22800
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 22950
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23100
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23250
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23400
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23550
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23700
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 23850
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 24000
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 24150
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 24300
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 24450
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 24600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 24750
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "wifi.state",
+   "value": "connected",
+   "t_ms": 27400
+  },
+  {
+   "type": "wifi",
+   "drop": true,
+   "t_ms": 27400
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "wifi_lost",
+   "t_ms": 27500
+  },
+  {
+   "type": "battery",
+   "percent": 3,
+   "t_ms": 27500
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "battery_critical",
+   "t_ms": 36550
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "power.state",
+   "value": "off",
+   "t_ms": 36550
   }
  ]
 }

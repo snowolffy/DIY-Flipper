@@ -101,7 +101,7 @@ class DialogScreen : public BasicScreen {
         yes_(std::move(yes)), no_(std::move(no)) {}
   bool overlay() const override { return true; }
   void onInput(App& app, const InputEvent& e) override;
-  void draw(App& app, ui::Framebuffer& fb) override { tk::dialog(fb, lines_, hint_); }
+  void draw(App&, ui::Framebuffer& fb) override { tk::dialog(fb, lines_, hint_); }
 
  private:
   std::vector<std::string> lines_;
@@ -119,7 +119,7 @@ class PopupScreen : public BasicScreen {
   InputMode inputMode() const override { return InputMode::List; }
   uint8_t deferMask() const override { return 0; }
   void onInput(App& app, const InputEvent& e) override;
-  void draw(App& app, ui::Framebuffer& fb) override { tk::popup(fb, items_, sel_, cy_); }
+  void draw(App&, ui::Framebuffer& fb) override { tk::popup(fb, items_, sel_, cy_); }
   PopupScreen& centreY(int16_t cy) { cy_ = cy; return *this; }
 
  private:

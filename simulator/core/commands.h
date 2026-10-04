@@ -17,7 +17,8 @@
 //   nfc_card    action: present|remove, uid, card_type, blocks: ["hex", ...], magic: bool
 //   nfc_reader  a reader taps the device while it emulates a card
 //   nfc_module  present: true|false (PN532 answers or not)
-//   wifi        any of: networks: [{ssid, rssi, secured}], next_connect_succeeds, latency_ms, ntp_responds
+//   wifi        any of: networks: [{ssid, rssi, secured}], next_connect_succeeds, latency_ms, ntp_responds,
+//               drop: true (the access point goes away while connected)
 //   ble_host    action: connect|disconnect, name
 //   ble_bonds   full: true|false (fill the bond list with placeholder devices, or clear them)
 //   power_switch on: true|false (the toggle between battery and boost converter)

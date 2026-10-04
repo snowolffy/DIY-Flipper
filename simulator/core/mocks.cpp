@@ -310,7 +310,7 @@ bool MockRtc::parse(const std::string& iso, hal::DateTime& out) {
 }
 
 std::string MockRtc::format(const hal::DateTime& t) {
-  char b[24];
+  char b[40];
   std::snprintf(b, sizeof(b), "%04u-%02u-%02uT%02u:%02u:%02u", t.year, t.month, t.day, t.hour, t.minute, t.second);
   return b;
 }

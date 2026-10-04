@@ -1,23 +1,501 @@
 {
-  "name": "nfc-read-save",
-  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false, "sd_present": false },
-  "events": [
-    { "t_ms": 100,  "type": "button", "button": "RIGHT" },
-    { "t_ms": 300,  "type": "button", "button": "OK" },
-    { "t_ms": 500,  "type": "button", "button": "OK" },
-    { "t_ms": 700,  "type": "assert", "check": "state_equals", "field": "nfc_polling", "value": true },
-    { "t_ms": 800,  "type": "nfc_card", "action": "present", "uid": "04A2245A6B1C80", "card_type": "NTAG215",
-      "blocks": ["04A22453", "5A6B1C80", "7F480000", "E1106D00"] },
-    { "t_ms": 1000, "type": "button", "button": "OK" },
-    { "t_ms": 1200, "type": "assert", "check": "storage_file_missing", "path": "sd:/nfc/04A2245A6B1C80.json" },
-    { "t_ms": 1200, "type": "assert", "check": "menu_path_equals", "value": "Main/NFC/Read card" },
-    { "t_ms": 1300, "type": "sd", "present": true },
-    { "t_ms": 1400, "type": "button", "button": "OK" },
-    { "t_ms": 1600, "type": "assert", "check": "storage_file_contains", "path": "sd:/nfc/04A2245A6B1C80.json", "text": "NTAG215" },
-    { "t_ms": 1600, "type": "nfc_card", "action": "remove" },
-    { "t_ms": 1700, "type": "button", "button": "CANCEL" },
-    { "t_ms": 1900, "type": "button", "button": "RIGHT" },
-    { "t_ms": 2100, "type": "button", "button": "OK" },
-    { "t_ms": 2300, "type": "assert", "check": "menu_path_equals", "value": "Main/NFC/Dump" }
-  ]
+ "name": "nfc-read-save",
+ "about": "read a card with no SD card (save fails), insert the card, save again",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5750
+  },
+  {
+   "type": "sd",
+   "present": false,
+   "t_ms": 5900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5950
+  },
+  {
+   "type": "nfc_card",
+   "uid": "04A23B1C",
+   "card_type": "MIFARE Classic 1K",
+   "blocks": [
+    "00000000000000000000000000000000",
+    "01000000000000000000000000000000",
+    "02000000000000000000000000000000",
+    "03000000000000000000000000000000",
+    "04000000000000000000000000000000",
+    "05000000000000000000000000000000",
+    "06000000000000000000000000000000",
+    "07000000000000000000000000000000",
+    "08000000000000000000000000000000",
+    "09000000000000000000000000000000",
+    "0A000000000000000000000000000000",
+    "0B000000000000000000000000000000",
+    "0C000000000000000000000000000000",
+    "0D000000000000000000000000000000",
+    "0E000000000000000000000000000000",
+    "0F000000000000000000000000000000",
+    "10000000000000000000000000000000",
+    "11000000000000000000000000000000",
+    "12000000000000000000000000000000",
+    "13000000000000000000000000000000",
+    "14000000000000000000000000000000",
+    "15000000000000000000000000000000",
+    "16000000000000000000000000000000",
+    "17000000000000000000000000000000",
+    "18000000000000000000000000000000",
+    "19000000000000000000000000000000",
+    "1A000000000000000000000000000000",
+    "1B000000000000000000000000000000",
+    "1C000000000000000000000000000000",
+    "1D000000000000000000000000000000",
+    "1E000000000000000000000000000000",
+    "1F000000000000000000000000000000",
+    "20000000000000000000000000000000",
+    "21000000000000000000000000000000",
+    "22000000000000000000000000000000",
+    "23000000000000000000000000000000",
+    "24000000000000000000000000000000",
+    "25000000000000000000000000000000",
+    "26000000000000000000000000000000",
+    "27000000000000000000000000000000",
+    "28000000000000000000000000000000",
+    "29000000000000000000000000000000",
+    "2A000000000000000000000000000000",
+    "2B000000000000000000000000000000",
+    "2C000000000000000000000000000000",
+    "2D000000000000000000000000000000",
+    "2E000000000000000000000000000000",
+    "2F000000000000000000000000000000",
+    "30000000000000000000000000000000",
+    "31000000000000000000000000000000",
+    "32000000000000000000000000000000",
+    "33000000000000000000000000000000",
+    "34000000000000000000000000000000",
+    "35000000000000000000000000000000",
+    "36000000000000000000000000000000",
+    "37000000000000000000000000000000",
+    "38000000000000000000000000000000",
+    "39000000000000000000000000000000",
+    "3A000000000000000000000000000000",
+    "3B000000000000000000000000000000",
+    "3C000000000000000000000000000000",
+    "3D000000000000000000000000000000",
+    "3E000000000000000000000000000000",
+    "3F000000000000000000000000000000"
+   ],
+   "t_ms": 6100
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "R3",
+   "t_ms": 7350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9000
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9150
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9300
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9450
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9600
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9750
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 9900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10050
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10200
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 11850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12000
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12150
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12300
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 12900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 13200
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 14850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15000
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15150
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15300
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 15750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "R4",
+   "t_ms": 15900
+  },
+  {
+   "type": "assert",
+   "check": "storage_file_missing",
+   "path": "sd:/nfc/KEY.nfc",
+   "t_ms": 15900
+  },
+  {
+   "type": "sd",
+   "present": true,
+   "t_ms": 15900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 15950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "R5",
+   "t_ms": 16200
+  },
+  {
+   "type": "assert",
+   "check": "storage_file_contains",
+   "path": "sd:/nfc/KEY.nfc",
+   "text": "uid=04A23B1C",
+   "t_ms": 16200
+  }
+ ]
 }

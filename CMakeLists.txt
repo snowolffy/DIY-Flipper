@@ -51,9 +51,22 @@ add_executable(unit_tests tests/unit_tests.cpp)
 target_link_libraries(unit_tests PRIVATE sim_core miniz diyf_warnings)
 
 enable_testing()
-add_test(NAME unit_tests COMMAND unit_tests)
+add_test(NAME unit_tests COMMAND unit_tests ${CMAKE_SOURCE_DIR})
 file(GLOB DIYF_SCRIPTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/sim/scripts/*.json)
 foreach(script ${DIYF_SCRIPTS})
   get_filename_component(script_name ${script} NAME_WE)
   add_test(NAME script_${script_name} COMMAND sim run ${script})
+endforeach()
+
+# ---- app rules: a level-1 app without onPauseRequest() / a level-2 app without onRawInput() must not build ----
+foreach(rule CONTROL LEVEL1_WITHOUT_PAUSE LEVEL2_WITHOUT_RAW)
+  string(TOLOWER ${rule} rule_lower)
+  add_executable(rules_${rule_lower} EXCLUDE_FROM_ALL tests/app_rules/rules_check.cpp)
+  target_compile_definitions(rules_${rule_lower} PRIVATE RULES_${rule})
+  target_link_libraries(rules_${rule_lower} PRIVATE firmware_core)
+  add_test(NAME app_rules_${rule_lower}
+           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target rules_${rule_lower} --config $<CONFIG>)
+  if(NOT rule STREQUAL "CONTROL")
+    set_tests_properties(app_rules_${rule_lower} PROPERTIES WILL_FAIL TRUE)
+  endif()
 endforeach()

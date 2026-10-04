@@ -1,0 +1,407 @@
+{
+ "name": "flow-games",
+ "about": "Games-new: built-in games at each bypass level, pause menu, failsafe, SD packs (loaded, failed, menu_flow)",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00",
+  "storage_seed": "seeds/demo"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5900
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 6050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 6200
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 6200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G4",
+   "t_ms": 7250
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 7400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 7400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8250
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 8400
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 8550
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 8550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9700
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 9850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9850
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 3200,
+   "t_ms": 10000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G5",
+   "t_ms": 13200
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "app_failsafe",
+   "t_ms": 13200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 13900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 13900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 14050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 14200
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 14200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 15050
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 15050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 15200
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 15200
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 15350
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 15500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 19000
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 19250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 19400
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 19400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 3200,
+   "t_ms": 19550
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 23600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 23600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 23750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G2",
+   "t_ms": 23900
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "pack_failed",
+   "t_ms": 24600
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G2f",
+   "t_ms": 24600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 24600
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 24750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 24750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 24900
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 25750
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 25750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 25900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 25900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 26050
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "pack_loaded",
+   "t_ms": 26900
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G3",
+   "t_ms": 26900
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 3200,
+   "t_ms": 26900
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 30950
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 30950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6a",
+   "t_ms": 31400
+  },
+  {
+   "type": "sd",
+   "present": false,
+   "t_ms": 31400
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 31450
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 31600
+  }
+ ]
+}

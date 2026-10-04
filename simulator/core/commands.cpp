@@ -225,6 +225,7 @@ CmdResult runCommand(CmdContext& ctx, const json& e) {
     if (e.contains("next_connect_succeeds")) s.wifi().setNextConnectSucceeds(e["next_connect_succeeds"].get<bool>());
     if (e.contains("latency_ms")) s.wifi().setLatencyMs(e["latency_ms"].get<uint32_t>());
     if (e.contains("ntp_responds")) s.wifi().setNtpResponds(e["ntp_responds"].get<bool>());
+    if (e.value("drop", false)) s.wifi().drop();
   } else if (type == "ble_host") {
     if (e.value("action", std::string("connect")) == "connect") s.ble().hostConnect(e.value("name", std::string("Phone")));
     else s.ble().hostDisconnect();

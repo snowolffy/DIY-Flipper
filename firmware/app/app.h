@@ -56,6 +56,12 @@ enum class SysEvent : uint8_t {
   PackLoaded,
   PackFailed,
   AppFailsafe,
+  // the flows' shared catalog (not used by any transition yet; fired so screens can react)
+  SdRemoved,
+  SdInserted,
+  BatteryLow,
+  BatteryCritical,
+  WifiLost,
 };
 const char* sysEventName(SysEvent e);  // the flow JSON id, e.g. "nfc_card_found"
 
@@ -214,6 +220,8 @@ class App {
   hal::WifiState lastWifi_ = hal::WifiState::Off;
   hal::BleState lastBle_ = hal::BleState::Off;
   bool lowBatteryWarned_ = false;
+  bool sdPresent_ = true;
+  int lastPct_ = -1;
 };
 
 }  // namespace app

@@ -279,6 +279,10 @@ class MockWifi : public hal::Wifi {
   void setLatencyMs(uint32_t ms) { latencyMs_ = ms; }
   uint32_t latencyMs() const { return latencyMs_; }
   void setNtpResponds(bool r) { ntp_ = r; }
+  // the access point goes away: Connected -> Idle
+  void drop() {
+    if (state_ == hal::WifiState::Connected) state_ = hal::WifiState::Idle, ssid_.clear();
+  }
   bool ntpResponds() const { return ntp_; }
   // UTC of the world outside at virtual time 0 (what NTP answers, advancing with the clock)
   void setWorldUtc(int64_t epoch) { worldEpoch_ = epoch; }

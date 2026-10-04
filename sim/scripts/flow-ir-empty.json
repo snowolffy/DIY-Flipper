@@ -1,116 +1,183 @@
 {
- "name": "wifi-connect",
- "about": "connect to a secured network and get the time by NTP",
+ "name": "flow-ir-empty",
+ "about": "IR-new: S1-0 and S2-0 empty states",
  "initial_state": {
   "battery_percent": 100,
   "rtc": "2026-10-03T12:34:00"
  },
  "events": [
   {
-   "type": "rtc",
-   "time": "2026-01-01T00:00:00",
-   "t_ms": 5300
-  },
-  {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 5350
+   "t_ms": 5300
   },
   {
    "type": "button",
    "button": "CANCEL",
    "action": "press",
-   "t_ms": 5500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5650
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5950
+   "t_ms": 5450
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 6100
+   "t_ms": 5600
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 6250
+   "t_ms": 5750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "S1-0",
+   "t_ms": 5900
   },
   {
    "type": "button",
-   "button": "OK",
+   "button": "CANCEL",
    "action": "press",
-   "t_ms": 7300
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "hold",
-   "duration_ms": 700,
-   "t_ms": 7450
+   "t_ms": 5900
   },
   {
    "type": "button",
    "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6200
+  },
+  {
+   "type": "ir_signal",
+   "protocol": "NEC",
+   "address": 1,
+   "command": 2,
+   "t_ms": 6350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6500
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 6650
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 6800
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 6950
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7100
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7250
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7400
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7550
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7700
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 7850
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 8000
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 8150
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 8300
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 8450
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 8600
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 8750
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 8900
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 9050
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
    "t_ms": 9200
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 9350
   },
@@ -158,109 +225,109 @@
   },
   {
    "type": "button",
-   "button": "OK",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 10550
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 10700
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 10850
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11150
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11300
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11450
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11600
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11750
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 11900
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 12050
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 12200
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 12350
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 12500
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 12650
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 12800
   },
   {
    "type": "button",
-   "button": "OK",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 12950
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 13100
   },
@@ -314,7 +381,7 @@
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 14450
   },
@@ -338,7 +405,7 @@
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15050
   },
@@ -374,155 +441,214 @@
   },
   {
    "type": "button",
-   "button": "OK",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 15950
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 16100
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 16250
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 16400
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 16550
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 16700
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 16850
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17150
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17300
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17450
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17600
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17750
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 17900
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18050
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18200
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18350
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18500
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18650
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18800
   },
   {
    "type": "button",
-   "button": "OK",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 18950
   },
   {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "C6a",
-   "t_ms": 20000
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 19100
   },
   {
-   "type": "assert",
-   "check": "state_equals",
-   "field": "wifi.ssid",
-   "value": "HomeNet",
-   "t_ms": 20000
-  },
-  {
-   "type": "assert",
-   "check": "state_equals",
-   "field": "wifi.password",
-   "value": "pass",
-   "t_ms": 20000
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 19250
   },
   {
    "type": "assert",
    "check": "screen_equals",
-   "value": "F0",
-   "t_ms": 21600
+   "value": "L5",
+   "t_ms": 19500
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 20800
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 20950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 21100
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "S1",
+   "t_ms": 21250
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 21250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "S2",
+   "t_ms": 21400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 21400
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 22250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "S2-0",
+   "t_ms": 22400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 22400
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "S1",
+   "t_ms": 22550
   }
  ]
 }

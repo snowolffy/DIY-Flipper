@@ -32,6 +32,11 @@ const char* sysEventName(SysEvent e) {
     case SysEvent::PackLoaded: return "pack_loaded";
     case SysEvent::PackFailed: return "pack_failed";
     case SysEvent::AppFailsafe: return "app_failsafe";
+    case SysEvent::SdRemoved: return "sd_removed";
+    case SysEvent::SdInserted: return "sd_inserted";
+    case SysEvent::BatteryLow: return "battery_low";
+    case SysEvent::BatteryCritical: return "battery_critical";
+    case SysEvent::WifiLost: return "wifi_lost";
   }
   return "?";
 }
@@ -63,6 +68,7 @@ void App::begin() {
   applyBrightness(settings_.brightness);
   lastWifi_ = hal_.wifi.state();
   lastBle_ = hal_.ble.state();
+  sdPresent_ = hal_.storage.present(hal::Volume::Sd);
   if (hal_.power.wakeReason() == hal::WakeReason::DeepSleep) shell::resumeFromDeepSleep(*this);
   else push(shell::makeBootStatus());
   applyOps();
@@ -245,6 +251,11 @@ void App::watchRadios() {
     if (lastWifi_ == hal::WifiState::Scanning && w != hal::WifiState::Scanning) emit(SysEvent::WifiScanDone);
     if (w == hal::WifiState::Connected) emit(SysEvent::WifiConnected);
     if (lastWifi_ == hal::WifiState::Connecting && w == hal::WifiState::Failed) emit(SysEvent::WifiConnectFailed);
+    // dropped by the network (our own disconnect() turns the radio off instead)
+    if (lastWifi_ == hal::WifiState::Connected && (w == hal::WifiState::Idle || w == hal::WifiState::Failed)) {
+      emit(SysEvent::WifiLost);
+      toast("WIFI LOST");
+    }
     lastWifi_ = w;
   }
   const hal::BleState b = hal_.ble.state();
@@ -254,6 +265,17 @@ void App::watchRadios() {
     if (b == hal::BleState::PairingRequest) emit(SysEvent::BlePairRequest);
     lastBle_ = b;
   }
+  const bool sd = hal_.storage.present(hal::Volume::Sd);
+  if (sd != sdPresent_) {
+    sdPresent_ = sd;
+    emit(sd ? SysEvent::SdInserted : SysEvent::SdRemoved);
+  }
+  const int pct = battery_.percent();
+  if (pct >= 0 && lastPct_ >= 0) {
+    if (pct <= settings_.lowBatteryPct && lastPct_ > settings_.lowBatteryPct) emit(SysEvent::BatteryLow);
+    if (pct <= apps::kPowerOffPct && lastPct_ > apps::kPowerOffPct) emit(SysEvent::BatteryCritical);
+  }
+  if (pct >= 0) lastPct_ = pct;
 }
 
 // The failsafe works at every bypass level and on the pause menu too: it watches the debounced Cancel
@@ -433,7 +455,7 @@ void App::compose(ui::Framebuffer& out, uint32_t t) {
     // a fade onto a dialog cross-fades (the page stays visible behind it); between pages it goes through
     // black: out first, then in
     const bool cross = !stack_.empty() && stack_.back()->overlay();
-    for (int i = 0; i < ui::kPixels; i++) {
+    for (size_t i = 0; i < ui::kPixels; i++) {
       if (cross) O[i] = blend565(A[i], B[i], k);
       else O[i] = k < 128 ? scale565(A[i], 256 - 2 * k) : scale565(B[i], 2 * (k - 128));
     }

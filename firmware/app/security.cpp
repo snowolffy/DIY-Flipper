@@ -86,14 +86,14 @@ void Security::begin(hal::Hal& hal, uint32_t now) {
   }
 }
 
-void Security::save() {
+void Security::save(uint32_t nowMs) {
   if (!hal_) return;
   std::string t;
   if (!pinHash_.empty()) t += "pin=" + pinHash_ + "\n";
   t += "wrong=" + std::to_string(wrong_) + "\n";
   t += "rounds=" + std::to_string(rounds_) + "\n";
   if (lockedUntil_) {
-    const uint32_t s = (lockedUntil_ - hal_->clock.millis() + 999) / 1000;
+    const uint32_t s = (lockedUntil_ - nowMs + 999) / 1000;
     t += "lockout_s=" + std::to_string(s) + "\n";
     hal::DateTime now;
     if (hal_->rtc.now(now)) t += "lockout_until=" + std::to_string(epochOf(now) + s) + "\n";
@@ -107,7 +107,7 @@ Security::Result Security::count(bool ok, uint32_t now) {
   if (ok) {
     const bool dirty = wrong_ || rounds_;
     wrong_ = rounds_ = 0;
-    if (dirty) save();
+    if (dirty) save(now);
     return Result::Ok;
   }
   if (++wrong_ >= kTriesPerRound) {
@@ -118,10 +118,10 @@ Security::Result Security::count(bool ok, uint32_t now) {
     rounds_++;
     lockedUntil_ = now + s * 1000u;
     if (!lockedUntil_) lockedUntil_ = 1;
-    save();
+    save(now);
     return Result::LockedOut;
   }
-  save();
+  save(now);
   return Result::Wrong;
 }
 
@@ -137,12 +137,12 @@ Security::Result Security::checkCode(const std::string& code, uint32_t now) {
 
 void Security::setPin(const std::string& pin) {
   pinHash_ = hashOf(pin);
-  save();
+  save(hal_ ? hal_->clock.millis() : 0);
 }
 
 void Security::removePin() {
   pinHash_.clear();
-  save();
+  save(hal_ ? hal_->clock.millis() : 0);
 }
 
 void Security::wipe() {

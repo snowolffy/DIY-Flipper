@@ -1,29 +1,144 @@
 {
-  "name": "ble-remote",
-  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
-  "events": [
-    { "t_ms": 100,  "type": "button", "button": "LEFT" },
-    { "t_ms": 200,  "type": "button", "button": "LEFT" },
-    { "t_ms": 400,  "type": "button", "button": "OK" },
-    { "t_ms": 600,  "type": "assert", "check": "state_equals", "field": "ble_state", "value": "advertising" },
-    { "t_ms": 700,  "type": "ble_host", "action": "connect", "name": "MacBook" },
-    { "t_ms": 800,  "type": "assert", "check": "state_equals", "field": "ble_state", "value": "pairing_request" },
-    { "t_ms": 900,  "type": "button", "button": "OK" },
-    { "t_ms": 1100, "type": "assert", "check": "state_equals", "field": "ble_state", "value": "connected" },
-    { "t_ms": 1200, "type": "button", "button": "OK" },
-    { "t_ms": 1400, "type": "button", "button": "RIGHT" },
-    { "t_ms": 1600, "type": "button", "button": "RIGHT", "action": "hold", "duration_ms": 800 },
-    { "t_ms": 2600, "type": "assert", "check": "state_equals", "field": "ble_keys_sent", "value": 5 },
-    { "t_ms": 2700, "type": "ble_host", "action": "disconnect" },
-    { "t_ms": 2800, "type": "assert", "check": "state_equals", "field": "ble_state", "value": "advertising" },
-    { "t_ms": 2900, "type": "ble_host", "action": "connect", "name": "MacBook" },
-    { "t_ms": 3000, "type": "assert", "check": "state_equals", "field": "ble_state", "value": "connected" },
-    { "t_ms": 3100, "type": "ble_host", "action": "disconnect" },
-    { "t_ms": 3200, "type": "ble_bonds", "full": true },
-    { "t_ms": 3300, "type": "ble_host", "action": "connect", "name": "iPad" },
-    { "t_ms": 3400, "type": "assert", "check": "state_equals", "field": "ble_state", "value": "bond_list_full" },
-    { "t_ms": 3500, "type": "button", "button": "CANCEL" },
-    { "t_ms": 3700, "type": "assert", "check": "state_equals", "field": "ble_state", "value": "off" },
-    { "t_ms": 3700, "type": "assert", "check": "menu_path_equals", "value": "Main" }
-  ]
+ "name": "ble-remote",
+ "about": "pair a phone and send media keys; leaving the menu keeps the connection",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6200
+  },
+  {
+   "type": "ble_host",
+   "name": "Phone",
+   "t_ms": 6350
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-P",
+   "t_ms": 6500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6500
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M1",
+   "t_ms": 6750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1",
+   "t_ms": 7200
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.keys_sent",
+   "value": 1,
+   "t_ms": 7200
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 7200
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 7350
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 7500
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6a",
+   "t_ms": 7950
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.state",
+   "value": "connected",
+   "t_ms": 7950
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.host",
+   "value": "Phone",
+   "t_ms": 7950
+  }
+ ]
 }

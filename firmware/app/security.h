@@ -43,7 +43,7 @@ class Security {
 
  private:
   Result count(bool ok, uint32_t now);
-  void save();
+  void save(uint32_t now);
   static std::string hashOf(const std::string& pin);
   bool emergencyMatches(const std::string& code) const;
 

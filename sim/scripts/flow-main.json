@@ -1,11 +1,23 @@
 {
- "name": "ir-learn-then-send",
- "about": "learn a NEC code into a new category, then send it from the Send list",
+ "name": "flow-main",
+ "about": "Main-new: boot, lock screens, PIN, lockout across a reboot, home, launcher, emergency menu",
  "initial_state": {
   "battery_percent": 100,
   "rtc": "2026-10-03T12:34:00"
  },
  "events": [
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3a",
+   "t_ms": 5300
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "boot_done",
+   "t_ms": 5300
+  },
   {
    "type": "button",
    "button": "OK",
@@ -13,401 +25,382 @@
    "t_ms": 5300
   },
   {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 5650
+  },
+  {
    "type": "button",
    "button": "CANCEL",
    "action": "press",
-   "t_ms": 5450
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 5600
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 5750
-  },
-  {
-   "type": "button",
-   "button": "OK",
-   "action": "press",
-   "t_ms": 5900
-  },
-  {
-   "type": "ir_signal",
-   "protocol": "NEC",
-   "address": 7,
-   "command": 2,
-   "t_ms": 6050
+   "t_ms": 5650
   },
   {
    "type": "assert",
    "check": "screen_equals",
-   "value": "L2a",
-   "t_ms": 6200
+   "value": "M6a",
+   "t_ms": 6100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6700
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6b",
+   "t_ms": 6850
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 6850
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 7300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 7300
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6b",
+   "t_ms": 7750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7750
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 6200
+   "t_ms": 7900
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "I0",
+   "t_ms": 8050
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "CANCEL",
    "action": "press",
-   "t_ms": 6350
+   "t_ms": 8050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6a",
+   "t_ms": 8200
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "CANCEL",
    "action": "press",
-   "t_ms": 6500
+   "t_ms": 8200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 8650
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "CANCEL",
    "action": "press",
-   "t_ms": 6650
+   "t_ms": 8650
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6a",
+   "t_ms": 9100
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "LEFT",
    "action": "press",
-   "t_ms": 6800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 6950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7100
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7250
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7400
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7550
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7700
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 7850
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8000
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8150
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8300
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 8450
+   "t_ms": 9100
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 8600
+   "t_ms": 9250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "T0",
+   "t_ms": 9400
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 8750
+   "t_ms": 9400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9700
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 8900
+   "t_ms": 9850
   },
   {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9050
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9200
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9350
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9650
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 9950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 10100
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "K1a",
+   "t_ms": 10000
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 10250
+   "t_ms": 10000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 10400
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 10550
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 10700
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 10850
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11000
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11150
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11300
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11450
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11600
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11750
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 11900
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12050
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12200
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12350
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12500
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12650
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12800
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 12950
+   "t_ms": 10150
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 13100
+   "t_ms": 10300
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 13250
+   "t_ms": 10450
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10600
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 13400
+   "t_ms": 10750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10900
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 13550
+   "t_ms": 11050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 11200
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 13700
+   "t_ms": 11350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 11500
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 13850
+   "t_ms": 11650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 11800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "K3b",
+   "t_ms": 11950
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14000
+   "t_ms": 11950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 12100
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14150
+   "t_ms": 12250
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 12400
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14300
+   "t_ms": 12550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 12700
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14450
+   "t_ms": 12850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 13000
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14600
+   "t_ms": 13150
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 13300
   },
   {
    "type": "button",
    "button": "RIGHT",
    "action": "press",
-   "t_ms": 14750
+   "t_ms": 13450
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "OK",
    "action": "press",
-   "t_ms": 14900
+   "t_ms": 13600
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "K1b",
+   "t_ms": 13750
   },
   {
    "type": "button",
-   "button": "RIGHT",
+   "button": "CANCEL",
    "action": "press",
-   "t_ms": 15050
+   "t_ms": 13750
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 13900
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 14050
+  },
+  {
+   "type": "button",
+   "button": "POWER",
+   "action": "press",
+   "t_ms": 14500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 14950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3b",
+   "t_ms": 15200
   },
   {
    "type": "button",
@@ -416,462 +409,695 @@
    "t_ms": 15200
   },
   {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M4a",
+   "t_ms": 15350
+  },
+  {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
    "t_ms": 15350
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15500
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15650
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15800
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 15950
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 16100
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "OK",
    "action": "press",
    "t_ms": 16250
   },
   {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M4b",
    "t_ms": 16400
   },
   {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 16550
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M4a",
+   "t_ms": 18000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 16700
+   "t_ms": 18000
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 16850
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17000
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17150
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17300
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17450
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17600
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17750
-  },
-  {
-   "type": "button",
-   "button": "LEFT",
-   "action": "press",
-   "t_ms": 17900
+   "t_ms": 18150
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 18050
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 18200
+   "t_ms": 18300
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 18350
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 18500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 18650
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 18800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 18950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19100
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19250
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19400
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19550
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19700
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 19850
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20000
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20150
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20300
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20450
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20600
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20750
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 20900
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 21050
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 21200
+   "t_ms": 18450
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 21350
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 21500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 21650
+   "t_ms": 18600
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 21800
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 21950
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22100
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22250
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22400
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22550
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22700
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 22850
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23000
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23150
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23300
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23450
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23600
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23750
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 23900
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 24050
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 24200
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 24350
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 24500
-  },
-  {
-   "type": "button",
-   "button": "RIGHT",
-   "action": "press",
-   "t_ms": 24650
+   "t_ms": 18750
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 24800
+   "t_ms": 18900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 19050
   },
   {
    "type": "assert",
    "check": "screen_equals",
-   "value": "L5",
-   "t_ms": 25050
-  },
-  {
-   "type": "assert",
-   "check": "storage_file_contains",
-   "path": "sd:/ir/TV.ir",
-   "text": "POWER",
-   "t_ms": 25050
-  },
-  {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "L1",
-   "t_ms": 26350
+   "value": "M4b",
+   "t_ms": 19200
   },
   {
    "type": "button",
-   "button": "CANCEL",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 26350
+   "t_ms": 20800
   },
   {
    "type": "button",
-   "button": "LEFT",
+   "button": "RIGHT",
    "action": "press",
-   "t_ms": 26500
+   "t_ms": 20950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 21100
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 26650
-  },
-  {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "S1",
-   "t_ms": 26800
+   "t_ms": 21250
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 26800
-  },
-  {
-   "type": "assert",
-   "check": "screen_equals",
-   "value": "S2",
-   "t_ms": 26950
+   "t_ms": 21400
   },
   {
    "type": "button",
    "button": "OK",
    "action": "press",
-   "t_ms": 26950
+   "t_ms": 21550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 21700
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 21850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 22000
   },
   {
    "type": "assert",
    "check": "screen_equals",
-   "value": "S2t",
-   "t_ms": 27100
+   "value": "M4c",
+   "t_ms": 22150
   },
   {
    "type": "assert",
    "check": "state_equals",
-   "field": "ir.sent_count",
-   "value": 1,
-   "t_ms": 27100
+   "field": "screen",
+   "value": "M4c",
+   "t_ms": 22150
+  },
+  {
+   "type": "restart",
+   "cold_boot": true,
+   "t_ms": 22150
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3b",
+   "t_ms": 27600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 27600
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M4c",
+   "t_ms": 27750
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "lockout_over",
+   "t_ms": 57750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3b",
+   "t_ms": 57750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 57750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 57900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 58050
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 58200
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 58350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 58500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 58650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 58800
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 58950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 59100
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 59250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 59400
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 59550
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 60000
+  },
+  {
+   "type": "restart",
+   "cold_boot": true,
+   "t_ms": 60000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M1",
+   "t_ms": 60250
+  },
+  {
+   "type": "button",
+   "button": "POWER",
+   "action": "hold",
+   "duration_ms": 900,
+   "t_ms": 60250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M7a",
+   "t_ms": 61300
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 61300
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M7b",
+   "t_ms": 61450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 61450
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 61600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 61750
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 61900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 62050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 62200
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 62350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 62500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 62650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 62800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 62950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 63100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 63250
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 63400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 63550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 63700
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M7b",
+   "t_ms": 63850
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 63850
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M7a",
+   "t_ms": 64700
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 64700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 64850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 65000
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 65150
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 65300
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 65450
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 65600
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 65750
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 65900
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 66050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 66200
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 66350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 66500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 66650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 66800
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 66950
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 67100
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 67250
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 67400
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 67550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 67700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 67850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68000
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68150
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68300
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68450
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 68600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 68900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 69050
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 69200
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 69350
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 69500
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 69650
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 69800
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 69950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M2",
+   "t_ms": 70200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3a",
+   "t_ms": 73800
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 73800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 74150
   }
  ]
 }

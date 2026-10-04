@@ -382,7 +382,7 @@ std::unique_ptr<Screen> makeLockedOut(std::function<void(App&)> after) {
     ui::drawTextCentered(fb, theme::small(), 56, "TRY AGAIN IN", col::kGray);
     const uint32_t left = (app.security().lockoutLeftMs(app.now()) + 999) / 1000;
     char t[8];
-    std::snprintf(t, sizeof(t), "%02u:%02u", (unsigned)(left / 60), (unsigned)(left % 60));
+    std::snprintf(t, sizeof(t), "%02u:%02u", (unsigned)(left / 60 % 100), (unsigned)(left % 60));
     bigTime(fb, 72, t, 2, col::kWhite);
     ui::drawPicTinted(fb, 56, 112, theme::icon("lock_new"), col::kGray, 2);
   });

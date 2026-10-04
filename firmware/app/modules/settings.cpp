@@ -5,6 +5,7 @@
 #include "app/modules.h"
 #include "app/shell.h"
 #include "app/theme.h"
+#include "app/theme.h"
 #include "app/valuelist.h"
 #include "app/widgets.h"
 #include "ui/gfx.h"
@@ -228,7 +229,7 @@ class DateTimeScreen : public ListScreen {
   std::vector<tk::Row> rows(App& app) override {
     hal::DateTime t;
     const bool ok = editing_ ? (t = edit_, true) : app.localTime(t);
-    char time[8], date[12];
+    char time[16], date[24];
     if (ok) {
       unsigned h = t.hour;
       if (!app.settings().clock24h && !editing_) h = h % 12 == 0 ? 12 : h % 12;
@@ -404,12 +405,48 @@ std::unique_ptr<Screen> makeResetScope() {
   }, "Reset");
 }
 
+// Not in the Settings-new flow: shown only when theme packs are on the SD card (code Y7).
+std::unique_ptr<Screen> makeThemePicker() {
+  return std::make_unique<MenuScreen>("Y7", "THEME", [](App& app) {
+    std::vector<MenuItem> items;
+    std::vector<std::string> names{""};
+    for (const auto& n : theme::available(app.hal().storage)) names.push_back(n);
+    for (const std::string& n : names) {
+      MenuItem it;
+      it.row.label = n.empty() ? "BUILT-IN" : tk::upper(n);
+      if (n == app.settings().theme) it.row.trail = tk::Trail::Check;
+      it.onOk = [n](App& a) {
+        std::string err;
+        std::vector<std::string> warnings;
+        if (n.empty()) theme::useBuiltIn();
+        else if (!theme::load(a.hal().storage, n, err, warnings)) {
+          a.toast("CAN'T LOAD THEME");
+          return;
+        }
+        a.settings().theme = n;
+        a.saveSettings();
+        if (!warnings.empty()) a.toast(std::to_string(warnings.size()) + " FILES SKIPPED");
+      };
+      items.push_back(it);
+    }
+    return items;
+  }, "Theme");
+}
+
 std::unique_ptr<Screen> makeSystem() {
-  return std::make_unique<MenuScreen>("Y1", "SYSTEM", [](App&) {
+  return std::make_unique<MenuScreen>("Y1", "SYSTEM", [](App& app) {
     std::vector<MenuItem> items(3);
     items[0].row.label = "STORAGE", items[0].onOk = [](App& a) { a.push(makeStorage()); };
     items[1].row.label = "FACTORY RESET", items[1].onOk = [](App& a) { a.push(makeResetScope()); };
     items[2].row.label = "FIRMWARE", items[2].onOk = [](App& a) { a.push(makeFirmware()); };
+    if (!theme::available(app.hal().storage).empty()) {
+      MenuItem t;
+      t.row.label = "THEME";
+      t.row.value = app.settings().theme.empty() ? "BUILT-IN" : tk::upper(app.settings().theme);
+      t.row.valueWhite = true;
+      t.onOk = [](App& a) { a.push(makeThemePicker()); };
+      items.push_back(t);
+    }
     return items;
   }, "System");
 }

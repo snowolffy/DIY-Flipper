@@ -1,26 +1,172 @@
 {
-  "name": "theme-import",
-  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
-  "events": [
-    { "t_ms": 0,    "type": "import", "file": "fixtures/night-theme.zip" },
-    { "t_ms": 0,    "type": "import", "file": "fixtures/moon.b1i" },
-    { "t_ms": 50,   "type": "assert", "check": "storage_file_exists", "path": "sd:/system/theme/night/theme.ini" },
-    { "t_ms": 50,   "type": "assert", "check": "storage_file_exists", "path": "sd:/media/moon.b1i" },
-    { "t_ms": 50,   "type": "assert", "check": "state_equals", "field": "theme", "value": "" },
-    { "t_ms": 100,  "type": "button", "button": "LEFT" },
-    { "t_ms": 300,  "type": "button", "button": "OK" },
-    { "t_ms": 500,  "type": "button", "button": "LEFT" },
-    { "t_ms": 700,  "type": "button", "button": "OK" },
-    { "t_ms": 900,  "type": "assert", "check": "menu_path_equals", "value": "Main/Settings/Theme" },
-    { "t_ms": 950,  "type": "button", "button": "RIGHT" },
-    { "t_ms": 1100, "type": "button", "button": "OK" },
-    { "t_ms": 1300, "type": "assert", "check": "state_equals", "field": "theme", "value": "night" },
-    { "t_ms": 1300, "type": "assert", "check": "menu_path_equals", "value": "Main/Settings/Theme" },
-    { "t_ms": 1400, "type": "button", "button": "CANCEL" },
-    { "t_ms": 1600, "type": "assert", "check": "menu_path_equals", "value": "Main/Settings" },
-    { "t_ms": 1600, "type": "assert", "check": "storage_file_contains", "path": "flash:/settings.ini", "text": "theme=night" },
-    { "t_ms": 1700, "type": "restart", "cold_boot": true },
-    { "t_ms": 1900, "type": "assert", "check": "state_equals", "field": "theme", "value": "night" },
-    { "t_ms": 1900, "type": "assert", "check": "framebuffer_hash_equals", "value": "bdbe2bb0b6a1dc06" }
-  ]
+ "name": "theme-import",
+ "about": "import a 1-bit (format 1) and a colour (format 2) theme pack, pick the colour one, it survives a reboot",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "import",
+   "file": "fixtures/night-theme.zip",
+   "t_ms": 5300
+  },
+  {
+   "type": "import",
+   "file": "fixtures/sunset-theme.zip",
+   "t_ms": 5350
+  },
+  {
+   "type": "assert",
+   "check": "storage_file_exists",
+   "path": "sd:/system/theme/sunset/splash.c16",
+   "t_ms": 5400
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5850
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6000
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6150
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6300
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6450
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 6600
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7050
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7200
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7350
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "Y7",
+   "t_ms": 7500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7800
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "theme",
+   "value": "sunset",
+   "t_ms": 7950
+  },
+  {
+   "type": "assert",
+   "check": "storage_file_contains",
+   "path": "flash:/settings.ini",
+   "text": "theme=sunset",
+   "t_ms": 7950
+  },
+  {
+   "type": "restart",
+   "cold_boot": true,
+   "t_ms": 7950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M2",
+   "t_ms": 10500
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "theme",
+   "value": "sunset",
+   "t_ms": 10500
+  },
+  {
+   "type": "assert",
+   "check": "framebuffer_hash_equals",
+   "value": "fcab818f92fa02f4",
+   "t_ms": 10500
+  }
+ ]
 }

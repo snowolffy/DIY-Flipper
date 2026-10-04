@@ -1,24 +1,266 @@
 {
-  "name": "hardware-faults",
-  "initial_state": { "battery_percent": 80, "rtc": "2026-09-30T12:45:00", "cold_boot": false },
-  "events": [
-    { "t_ms": 0,    "type": "battery", "percent": "unknown" },
-    { "t_ms": 0,    "type": "rtc", "missing": true },
-    { "t_ms": 0,    "type": "sd", "present": false },
-    { "t_ms": 1100, "type": "assert", "check": "state_equals", "field": "battery_percent", "value": -1 },
-    { "t_ms": 1100, "type": "assert", "check": "state_equals", "field": "sd_present", "value": false },
-    { "t_ms": 1200, "type": "button", "button": "LEFT" },
-    { "t_ms": 1400, "type": "button", "button": "OK" },
-    { "t_ms": 1600, "type": "button", "button": "RIGHT" },
-    { "t_ms": 1700, "type": "button", "button": "RIGHT" },
-    { "t_ms": 1900, "type": "button", "button": "OK" },
-    { "t_ms": 2100, "type": "assert", "check": "menu_path_equals", "value": "Main/Settings/Firmware" },
-    { "t_ms": 2200, "type": "storage", "fail_writes": true },
-    { "t_ms": 2300, "type": "button", "button": "CANCEL" },
-    { "t_ms": 2400, "type": "button", "button": "LEFT" },
-    { "t_ms": 2500, "type": "button", "button": "LEFT" },
-    { "t_ms": 2700, "type": "button", "button": "OK" },
-    { "t_ms": 2900, "type": "assert", "check": "state_equals", "field": "invert", "value": true },
-    { "t_ms": 2900, "type": "assert", "check": "storage_file_missing", "path": "flash:/settings.ini" }
-  ]
+ "name": "hardware-faults",
+ "about": "no battery reading, no RTC, no SD card, failing flash writes: the UI keeps going",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "battery",
+   "percent": "unknown",
+   "t_ms": 5300
+  },
+  {
+   "type": "rtc",
+   "missing": true,
+   "t_ms": 5350
+  },
+  {
+   "type": "sd",
+   "present": false,
+   "t_ms": 5400
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "battery.firmware_percent",
+   "value": -1,
+   "t_ms": 6550
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "rtc",
+   "value": null,
+   "t_ms": 6550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6550
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M5",
+   "t_ms": 6900
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 6900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7500
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7650
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 7950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 8100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8250
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8400
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8700
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 8850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "Y1",
+   "t_ms": 9150
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9150
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "Y2",
+   "t_ms": 9300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 9300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 9450
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "T0",
+   "t_ms": 9600
+  },
+  {
+   "type": "storage",
+   "fail_writes": true,
+   "t_ms": 9600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "T1",
+   "t_ms": 9950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9950
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10100
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10250
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "T1",
+   "t_ms": 10400
+  },
+  {
+   "type": "assert",
+   "check": "storage_file_missing",
+   "path": "flash:/settings.ini",
+   "t_ms": 10400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 10400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 10550
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 11000
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 11150
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 11300
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 11450
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "G1",
+   "t_ms": 11600
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 11600
+  }
+ ]
 }

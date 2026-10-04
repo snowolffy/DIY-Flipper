@@ -1,0 +1,106 @@
+{
+ "name": "boot-buttons",
+ "about": "the boot status page ignores buttons; only Power hold (or Cancel held + OK) opens the emergency menu",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 100
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 250
+  },
+  {
+   "type": "button",
+   "button": "LEFT",
+   "action": "press",
+   "t_ms": 400
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 550
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M1",
+   "t_ms": 700
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M2",
+   "t_ms": 2200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M3a",
+   "t_ms": 5900
+  },
+  {
+   "type": "restart",
+   "cold_boot": true,
+   "t_ms": 5900
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 300,
+   "t_ms": 6050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M1",
+   "t_ms": 6500
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "down",
+   "t_ms": 6500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6650
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "up",
+   "t_ms": 6800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M7a",
+   "t_ms": 6950
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 6950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M2",
+   "t_ms": 7200
+  }
+ ]
+}

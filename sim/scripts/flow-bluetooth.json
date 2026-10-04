@@ -1,0 +1,434 @@
+{
+ "name": "flow-bluetooth",
+ "about": "Bluetooth-new: advertise, known and new hosts, pair request, remote pages, not connected, paired devices, forget",
+ "initial_state": {
+  "battery_percent": 100,
+  "rtc": "2026-10-03T12:34:00"
+ },
+ "events": [
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 5300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 5450
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5600
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5750
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 5900
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 6050
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 6200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M0",
+   "t_ms": 6350
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.state",
+   "value": "advertising",
+   "t_ms": 6350
+  },
+  {
+   "type": "ble_host",
+   "name": "Laptop",
+   "t_ms": 6350
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "ble_connected",
+   "t_ms": 6500
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M1",
+   "t_ms": 6500
+  },
+  {
+   "type": "ble_host",
+   "action": "disconnect",
+   "t_ms": 6500
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "ble_disconnected",
+   "t_ms": 6650
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M0",
+   "t_ms": 6650
+  },
+  {
+   "type": "ble_host",
+   "name": "New_Phone",
+   "t_ms": 6650
+  },
+  {
+   "type": "assert",
+   "check": "event_fired",
+   "value": "ble_pair_request",
+   "t_ms": 6800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-P",
+   "t_ms": 6800
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 6800
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M0",
+   "t_ms": 6950
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.state",
+   "value": "advertising",
+   "t_ms": 6950
+  },
+  {
+   "type": "ble_host",
+   "name": "New_Phone",
+   "t_ms": 6950
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-P",
+   "t_ms": 7100
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7100
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M1",
+   "t_ms": 7350
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.host",
+   "value": "New_Phone",
+   "t_ms": 7350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7350
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B0",
+   "t_ms": 7500
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7500
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1",
+   "t_ms": 7650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 7650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "hold",
+   "duration_ms": 800,
+   "t_ms": 7800
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.keys_sent",
+   "value": 4,
+   "t_ms": 8750
+  },
+  {
+   "type": "ble_host",
+   "action": "disconnect",
+   "t_ms": 8750
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1x",
+   "t_ms": 8900
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 8900
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.keys_sent",
+   "value": 4,
+   "t_ms": 9050
+  },
+  {
+   "type": "ble_host",
+   "name": "New_Phone",
+   "t_ms": 9050
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1",
+   "t_ms": 9200
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 9200
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B0",
+   "t_ms": 9350
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9350
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9500
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1p",
+   "t_ms": 9650
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 9650
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.keys_sent",
+   "value": 5,
+   "t_ms": 9800
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 9800
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 9950
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10100
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B1k",
+   "t_ms": 10250
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 10250
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 10400
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M1",
+   "t_ms": 10550
+  },
+  {
+   "type": "button",
+   "button": "RIGHT",
+   "action": "press",
+   "t_ms": 10550
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10700
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "P1",
+   "t_ms": 10850
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 10850
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "P2",
+   "t_ms": 11000
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 11000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "P1",
+   "t_ms": 11150
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "hold",
+   "duration_ms": 700,
+   "t_ms": 11150
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "P1d",
+   "t_ms": 12000
+  },
+  {
+   "type": "button",
+   "button": "OK",
+   "action": "press",
+   "t_ms": 12000
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "P1",
+   "t_ms": 12150
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.state",
+   "value": "advertising",
+   "t_ms": 12150
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 12150
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "B-M0",
+   "t_ms": 12300
+  },
+  {
+   "type": "button",
+   "button": "CANCEL",
+   "action": "press",
+   "t_ms": 12300
+  },
+  {
+   "type": "assert",
+   "check": "screen_equals",
+   "value": "M6a",
+   "t_ms": 12750
+  },
+  {
+   "type": "assert",
+   "check": "state_equals",
+   "field": "ble.state",
+   "value": "off",
+   "t_ms": 12750
+  }
+ ]
+}

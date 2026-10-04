@@ -16,7 +16,8 @@ void InputRecognizer::update(const hal::Input& in, uint32_t now, uint8_t deferMa
     if (first_) {
       // a button already down at boot is stale until released
       s.down = s.stale = lvl;
-      s.edgeAt = s.downAt = now;
+      s.downAt = now;
+      s.edgeAt = now - kDebounceMs;  // the first real edge is taken at once
       continue;
     }
     // debounce: an edge is taken at once, then the level is ignored for kDebounceMs (contact bounce)
