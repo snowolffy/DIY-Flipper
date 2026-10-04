@@ -14,7 +14,8 @@
 //   storage     fail_writes: true|false
 //   ir_signal   protocol: NEC|Samsung|Sony|RC5|RAW, address, command (numbers or "0x.." strings),
 //               raw: [us, ...] or raw_file: path to a timings text file (relative to the project)
-//   nfc_card    action: present|remove, uid, card_type, blocks: ["hex", ...], magic: bool
+//   nfc_card    action: present|remove, uid, card_type, blocks: ["hex", ...], magic: bool;
+//               or dump: "sd:/nfc/NAME.nfc" (the card a saved dump was read from)
 //   nfc_reader  a reader taps the device while it emulates a card
 //   nfc_module  present: true|false (PN532 answers or not)
 //   wifi        any of: networks: [{ssid, rssi, secured}], next_connect_succeeds, latency_ms, ntp_responds,

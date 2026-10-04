@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DIY Flipper Emulator</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div id="app">
+<header class="top">
+  <div class="brand">DIY Flipper Emulator</div>
+  <button id="projectBtn" class="chip" title="Change the project folder"><span class="dim">Project</span><span id="projectPath" class="mono">…</span></button>
+  <div class="chip"><span class="dim">Board</span><span id="boardName" class="mono">ESP32-S3 N16R8 · ST7735 128×160 RGB565</span></div>
+  <div class="grow"></div>
+  <div id="pathUptime" class="mono dim">…</div>
+  <div class="row gap8">
+    <button id="pauseBtn" class="btn">Pause</button>
+    <button id="restartBtn" class="btn">Restart</button>
+    <button id="coldBtn" class="btn accent">Cold boot</button>
+  </div>
+</header>
+
+<div class="middle">
+  <section class="device" aria-label="Device">
+    <div class="row top-align gap16">
+      <div class="pcb">
+        <div id="screenBox" class="screen-box"><canvas id="screen" width="128" height="160" aria-label="Device screen"></canvas></div>
+        <div class="keys4">
+          <button class="key" data-btn="OK">OK<span class="cap" data-cap="OK">Z</span></button>
+          <button class="key" data-btn="CANCEL">Cancel<span class="cap" data-cap="CANCEL">X</span></button>
+          <button class="key" data-btn="LEFT">&lt;<span class="cap" data-cap="LEFT">←</span></button>
+          <button class="key" data-btn="RIGHT">&gt;<span class="cap" data-cap="RIGHT">→</span></button>
+        </div>
+      </div>
+      <div class="side">
+        <button class="key small" data-btn="POWER">Power<span class="cap" data-cap="POWER">P</span></button>
+        <label class="field">Switch
+          <select id="switchSel"><option value="on">On</option><option value="off">Off</option></select>
+        </label>
+      </div>
+    </div>
+    <div class="under">
+      <span id="heldText" class="held">Keyboard: hold keys together for a combo. Mouse: right-click a button to lock it held.</span>
+      <button id="editKeysBtn" class="btn sm">Edit keys</button>
+      <label class="row gap6">Zoom
+        <select id="zoomSel"><option value="3">3×</option><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="fit">Fit</option></select>
+      </label>
+      <button id="savePngBtn" class="btn sm">Save screen (PNG)</button>
+      <span id="hashText" class="mono">16-bit color · hash …</span>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Hardware panel">
+    <nav class="tabs" id="tabs">
+      <button data-tab="hw" class="on">Hardware</button>
+      <button data-tab="ir">IR</button>
+      <button data-tab="nfc">NFC</button>
+      <button data-tab="wifi">WiFi</button>
+      <button data-tab="bt">Bluetooth</button>
+      <button data-tab="files">Files</button>
+      <button data-tab="scripts">Scripts</button>
+    </nav>
+    <div class="tab-body">
+
+      <div class="tab" id="tab-hw">
+        <div class="group">
+          <div class="label">You control</div>
+          <div class="ctl-row"><div class="what"><div>Battery</div><div class="sub" id="pinBattery"></div></div>
+            <label class="grow row gap8"><span id="batVal" class="mono">80%</span><input id="batRange" type="range" min="0" max="100" value="80" aria-label="Battery percent"></label>
+            <label class="row gap6"><input id="batNone" type="checkbox">No reading</label></div>
+          <div class="ctl-row"><div class="what"><div>USB power</div><div class="sub" id="pinUsb"></div></div>
+            <label class="row gap6"><input id="usbChk" type="checkbox">Plugged in (charging)</label>
+            <label class="row gap6"><input id="usbUnknown" type="checkbox" checked>No sense pin</label></div>
+          <div class="ctl-row"><div class="what"><div>SD card</div><div class="sub" id="pinSd"></div></div>
+            <label class="row gap6"><input id="sdChk" type="checkbox" checked>Inserted</label>
+            <label class="row gap6"><input id="sdFail" type="checkbox">Fail every write</label></div>
+          <div class="ctl-row"><div class="what"><div>Clock</div><div class="sub">DS3231 · I2C 0x68</div></div>
+            <span id="rtcText" class="mono">…</span>
+            <label class="row gap6"><input id="rtcMissing" type="checkbox">Missing</label>
+            <button id="rtcPc" class="btn sm">Set to PC time</button></div>
+        </div>
+        <div class="group">
+          <div class="label">Firmware is driving</div>
+          <div class="grid2" id="drivenGrid"></div>
+        </div>
+        <div class="group">
+          <div class="label">Pins (board profile)</div>
+          <table class="pins" id="pinsTable"></table>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-ir">
+        <div class="status"><span class="dim">Firmware IR receiver</span><span id="irListen" class="mono">not listening</span></div>
+        <div class="group">
+          <div class="label">Press a remote at the device</div>
+          <div class="row wrap gap8 bottom">
+            <label class="field grow">Protocol<select id="irProto"><option>NEC</option><option>Samsung</option><option>Sony</option><option>RC5</option><option>RAW</option></select></label>
+            <label class="field grow">Address<input id="irAddr" type="text" value="0x04" class="mono"></label>
+            <label class="field grow">Command<input id="irCmd" type="text" value="0x08" class="mono"></label>
+          </div>
+          <div class="row wrap gap8">
+            <button id="irPress" class="btn accent">Press remote button</button>
+            <button id="irRaw" class="btn">Load RAW timings…</button>
+            <input id="irRawFile" type="file" accept=".txt,.csv,.raw" class="hidden">
+          </div>
+          <div class="hint">The signal is lost unless the firmware is listening, as on the real receiver.</div>
+        </div>
+        <div class="group">
+          <div class="label">Sent by the device</div>
+          <div id="irSent"></div>
+          <div class="row"><button id="irClear" class="btn">Clear list</button></div>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-nfc">
+        <div class="status"><span class="dim">PN532</span><span id="nfcStatus" class="mono">not polling</span></div>
+        <div class="group">
+          <div class="label">Card at the reader</div>
+          <div class="row wrap gap8 bottom">
+            <label class="field grow">UID<input id="nfcUid" type="text" value="04 A2 3B 1C" class="mono"></label>
+            <label class="field grow">Type<select id="nfcType"><option>MIFARE Classic 1K</option><option>MIFARE Ultralight</option><option>NTAG215</option></select></label>
+          </div>
+          <div class="row wrap gap8 bottom">
+            <label class="field" style="flex:0 0 90px">Blocks<input id="nfcBlocks" type="text" value="64" class="mono"></label>
+            <label class="field grow">Or use a saved dump<select id="nfcDump"><option value="">— none —</option></select></label>
+          </div>
+          <div class="row wrap gap8">
+            <button id="nfcPlace" class="btn accent">Place card</button>
+            <button id="nfcRemove" class="btn">Remove card</button>
+          </div>
+          <label class="row gap6"><input id="nfcMagic" type="checkbox">Magic card (UID can be rewritten)</label>
+          <label class="row gap6"><input id="nfcModule" type="checkbox" checked>PN532 answers</label>
+        </div>
+        <div class="group">
+          <div class="label">Reader at the device (emulate mode)</div>
+          <div class="row"><button id="nfcTap" class="btn">Tap with a reader</button></div>
+          <div id="nfcEmu" class="empty">The device is not emulating a card.</div>
+        </div>
+        <div class="group">
+          <div class="label">Written by the device</div>
+          <div id="nfcWritten" class="empty">No writes yet.</div>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-wifi">
+        <div class="status"><span class="dim">Device WiFi</span><span id="wifiStatus" class="mono">off</span></div>
+        <div class="group">
+          <div class="label">Networks in range (name · dBm)</div>
+          <div id="wifiNets"></div>
+          <div class="row"><button id="wifiAdd" class="btn">Add network</button></div>
+        </div>
+        <div class="group">
+          <div class="label">Behaviour</div>
+          <label class="row gap6"><input id="wifiOk" type="checkbox" checked>Next connect succeeds</label>
+          <label class="row gap6"><input id="wifiNtp" type="checkbox" checked>Time server (NTP) answers</label>
+          <label class="row gap8"><span id="wifiDelayText" style="flex:0 0 110px">Delay 800 ms</span><input id="wifiDelay" type="range" min="0" max="5000" step="100" value="800" aria-label="Scan and connect delay" class="grow"></label>
+          <div class="row"><button id="wifiDrop" class="btn">Access point goes away</button></div>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-bt">
+        <div class="status"><span class="dim">Device Bluetooth</span><span id="btStatus" class="mono">off</span></div>
+        <div class="group">
+          <div class="label">Host (phone or PC)</div>
+          <label class="field">Host name<input id="btHost" type="text" value="Pixel 8" class="mono"></label>
+          <div class="row wrap gap8">
+            <button id="btConnect" class="btn accent">Host connects</button>
+            <button id="btDisconnect" class="btn">Host disconnects</button>
+          </div>
+          <div class="status"><span class="dim">Pairing code the host shows</span><span id="btCode" class="mono">—</span></div>
+        </div>
+        <div class="group">
+          <div class="label">Paired hosts on the device</div>
+          <div id="btBonds"></div>
+          <label class="row gap6"><input id="btFull" type="checkbox">Pair list is full</label>
+        </div>
+        <div class="group">
+          <div class="label">Keys the host received</div>
+          <div id="btKeys"></div>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-files">
+        <div class="group">
+          <div class="label">Project folder (real files on this PC)</div>
+          <div id="filesRoot" class="mono path"></div>
+          <div class="row wrap gap8">
+            <button id="openFolder" class="btn">Open in file manager</button>
+            <select id="seedSel" aria-label="Seed"></select>
+            <button id="resetSeed" class="btn">Reset from seed…</button>
+          </div>
+        </div>
+        <div class="group">
+          <div class="label">Device storage</div>
+          <div id="filesTree" class="tree mono"></div>
+        </div>
+        <div class="group">
+          <div class="label">Import asset</div>
+          <div id="dropZone" class="drop">Drop a file exported from Flipper UI Studio here, or choose one.<br><span class="dim">.c16 · .b1i · .b1f · theme pack .zip</span></div>
+          <div class="row"><button id="importBtn" class="btn">Choose file…</button><input id="importFile" type="file" class="hidden"></div>
+          <div id="importResult" class="hint"></div>
+        </div>
+      </div>
+
+      <div class="tab hidden" id="tab-scripts">
+        <div class="group">
+          <div class="label">Scripts in this project</div>
+          <div id="scriptList"></div>
+        </div>
+        <div class="row wrap gap8">
+          <button id="runHere" class="btn accent">Run here</button>
+          <button id="runAll" class="btn">Run all</button>
+          <button id="stopScript" class="btn">Stop</button>
+        </div>
+        <label class="row gap6"><input id="restartFirst" type="checkbox" checked>Restart the device first</label>
+        <div id="scriptDetail" class="hint"></div>
+        <div class="group">
+          <div class="label">Record</div>
+          <div class="row"><button id="recordBtn" class="btn">Start recording</button></div>
+          <div class="hint">Saves what you do in the window as a new script.</div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+</div>
+
+<footer class="log" aria-label="Command log">
+  <div class="log-head">
+    <span>Command log — every click here is the same command the terminal runs</span>
+    <button id="saveLog" class="btn xs">Save as script</button>
+  </div>
+  <div id="logLines" class="log-lines mono"></div>
+</footer>
+</div>
+
+<dialog id="keysDlg">
+  <form method="dialog">
+    <h3>Edit keys</h3>
+    <p class="hint">Click a button, then press the key for it. Saved for this project.</p>
+    <div id="keysList"></div>
+    <div class="row gap8"><button value="reset" id="keysReset" class="btn">Defaults</button><div class="grow"></div><button value="close" class="btn accent">Done</button></div>
+  </form>
+</dialog>
+<script src="assets/app.js"></script>
+</body>
+</html>

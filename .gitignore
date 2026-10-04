@@ -5,3 +5,6 @@
 .idea/
 *.pbm
 /sim/screenshots/
+/sim/.sim-session.json
+/sim/.sim-keys.json
+/sim/imports/

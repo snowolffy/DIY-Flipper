@@ -103,7 +103,7 @@ bool validateCommand(const json& e, std::string& err) {
       err = "nfc_card action must be present or remove";
       return false;
     }
-    if (a == "present" && str(e, "uid").empty()) {
+    if (a == "present" && str(e, "uid").empty() && str(e, "dump").empty()) {
       err = "nfc_card present needs a uid";
       return false;
     }
@@ -208,6 +208,25 @@ CmdResult runCommand(CmdContext& ctx, const json& e) {
       c.magic = e.value("magic", false);
       if (e.contains("blocks") && e["blocks"].is_array())
         for (const json& v : e["blocks"]) c.blocks.push_back(v.get<std::string>());
+      // or a saved dump on the device's storage: the card it was read from
+      if (!str(e, "dump").empty()) {
+        hal::Volume v;
+        std::string path, text;
+        if (!MockStorage::parse(str(e, "dump"), v, path) || !s.storage().read(v, path, text)) {
+          r.ok = false;
+          r.error = "can't read dump " + str(e, "dump");
+          return r;
+        }
+        c.blocks.clear();
+        std::istringstream in(text);
+        std::string line;
+        while (std::getline(in, line)) {
+          if (!line.empty() && line.back() == '\r') line.pop_back();
+          if (line.rfind("uid=", 0) == 0) c.uid = line.substr(4);
+          else if (line.rfind("type=", 0) == 0) c.type = line.substr(5);
+          else if (line.rfind("block=", 0) == 0) c.blocks.push_back(line.substr(6));
+        }
+      }
       s.nfc().place(c);
     }
   } else if (type == "nfc_reader") {

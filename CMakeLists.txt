@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 project(diy_flipper LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -43,8 +43,20 @@ target_link_libraries(sim_core PUBLIC firmware_core PRIVATE miniz diyf_warnings)
 
 # ---- sim: the one emulator exe (window server, terminal commands, script runner) ----
 file(GLOB DIYF_SIM_SOURCES CONFIGURE_DEPENDS simulator/cli/*.cpp)
-add_executable(sim ${DIYF_SIM_SOURCES})
+file(GLOB_RECURSE DIYF_WEB_FILES CONFIGURE_DEPENDS simulator/web/*)
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/web_assets.cpp
+  COMMAND ${CMAKE_COMMAND} -DDIR=${CMAKE_SOURCE_DIR}/simulator/web -DOUT=${CMAKE_BINARY_DIR}/web_assets.cpp
+          -P ${CMAKE_SOURCE_DIR}/cmake/embed_web.cmake
+  DEPENDS ${DIYF_WEB_FILES} ${CMAKE_SOURCE_DIR}/cmake/embed_web.cmake
+  COMMENT "Embedding the emulator window files")
+add_executable(sim ${DIYF_SIM_SOURCES} ${CMAKE_BINARY_DIR}/web_assets.cpp)
 target_link_libraries(sim PRIVATE sim_core miniz diyf_warnings)
+find_package(Threads REQUIRED)
+target_link_libraries(sim PRIVATE Threads::Threads)
+if(WIN32)
+  target_link_libraries(sim PRIVATE ws2_32)
+endif()
 
 # ---- unit tests for firmware logic that scripts can't reach precisely ----
 add_executable(unit_tests tests/unit_tests.cpp)
@@ -70,3 +82,8 @@ foreach(rule CONTROL LEVEL1_WITHOUT_PAUSE LEVEL2_WITHOUT_RAW)
     set_tests_properties(app_rules_${rule_lower} PROPERTIES WILL_FAIL TRUE)
   endif()
 endforeach()
+
+# ---- the terminal-only session path (sim open / press / state / shot / close) ----
+add_test(NAME cli_session_flow
+         COMMAND ${CMAKE_COMMAND} -DSIM=$<TARGET_FILE:sim> -DSRC=${CMAKE_SOURCE_DIR}/sim -DWORK=${CMAKE_BINARY_DIR}/cli_flow
+                 -P ${CMAKE_SOURCE_DIR}/tests/cli_flow.cmake)
