@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "app/app_rules.h"
 #include "app/modules.h"
 #include "app/theme.h"
 #include "app/toolkit.h"
@@ -435,7 +436,7 @@ void checkBattery(App& app) {
   const int pct = app.battery().percent();
   if (pct < 0) return;
   static bool warned = false;
-  if (pct <= 2) {
+  if (pct <= apps::kPowerOffPct) {
     // flat: save what can be saved and switch off (the toggle switch cuts the battery for real)
     app.saveSettings();
     app.hal().power.powerOff();

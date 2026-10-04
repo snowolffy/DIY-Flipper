@@ -78,6 +78,8 @@ class Screen {
   virtual bool keepAwake() const { return false; }
   // Raw button levels instead of gestures (apps at bypass level 2); the host still runs the failsafe.
   virtual bool rawInput() const { return false; }
+  // The app host page (games): while one is in the stack, Cancel held apps::kFailsafeMs forces it out.
+  virtual bool hostsApp() const { return false; }
 
   virtual void onEnter(App&) {}
   virtual void onResume(App&) {}  // on top again after the screen above closed
@@ -177,6 +179,7 @@ class App {
   void watchRadios();
   void handleIdle(bool anyInput);
   void handlePowerButton(const InputEvent& e);
+  void checkFailsafe();
   void wake();
   void render(bool force);
   void drawStack(ui::Framebuffer& fb, size_t index);
@@ -206,6 +209,7 @@ class App {
   bool firstFrame_ = true;
   bool dimmed_ = false, screenOff_ = false, lightWoke_ = false;
   int failsafe_ = 0;
+  bool failsafeFired_ = false;
   int lastBrightness_ = -1;
   hal::WifiState lastWifi_ = hal::WifiState::Off;
   hal::BleState lastBle_ = hal::BleState::Off;

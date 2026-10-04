@@ -229,10 +229,10 @@ void message(Framebuffer& fb, const char* ic, const std::vector<std::string>& li
 }
 
 void progress(Framebuffer& fb, int16_t y, int done, int total, const std::string& counter) {
-  fb.frameRect(12, y, 104, 10, col::kWhite);
-  const int16_t w = total > 0 ? (int16_t)(100 * done / total) : 0;
-  fb.fillRect(14, (int16_t)(y + 2), w, 6, col::kWhite);
-  centred(fb, (int16_t)(y + 20), counter, col::kGray);
+  fb.frameRect(10, y, 108, 10, col::kWhite);
+  const int16_t w = total > 0 ? (int16_t)(104 * done / total) : 0;
+  fb.fillRect(12, (int16_t)(y + 2), w, 6, col::kWhite);
+  centred(fb, (int16_t)(y + 18), counter, col::kGray);
 }
 
 // ---------------- overlays ----------------

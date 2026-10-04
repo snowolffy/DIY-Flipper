@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "app/app_rules.h"
 #include "app/shell.h"
 #include "app/theme.h"
 #include "app/toolkit.h"
@@ -217,6 +218,7 @@ void App::tick() {
     applyOps();
   }
 
+  checkFailsafe();
   watchRadios();
   while (!pending_.empty()) {
     const SysEvent e = pending_.front();
@@ -251,6 +253,30 @@ void App::watchRadios() {
     if (lastBle_ == hal::BleState::Connected) emit(SysEvent::BleDisconnected);
     if (b == hal::BleState::PairingRequest) emit(SysEvent::BlePairRequest);
     lastBle_ = b;
+  }
+}
+
+// The failsafe works at every bypass level and on the pause menu too: it watches the debounced Cancel
+// level itself, not the gestures the app may be getting.
+void App::checkFailsafe() {
+  int host = -1;
+  for (size_t i = 0; i < stack_.size(); i++)
+    if (stack_[i]->hostsApp()) host = (int)i;
+  const uint32_t held = input_.downFor(hal::Button::Cancel, now_);
+  if (host < 0 || held == 0) {
+    failsafe_ = 0;
+    failsafeFired_ = false;
+    return;
+  }
+  if (failsafeFired_) return;
+  failsafe_ = held < apps::kFailsafeBarFromMs ? 0
+              : (int)((held - apps::kFailsafeBarFromMs) * 1000 / (apps::kFailsafeMs - apps::kFailsafeBarFromMs));
+  if (held >= apps::kFailsafeMs) {
+    failsafeFired_ = true;
+    failsafe_ = 0;
+    popToDepth((size_t)host + 1);
+    applyOps();
+    emit(SysEvent::AppFailsafe);
   }
 }
 
