@@ -202,6 +202,8 @@ class TextInputScreen : public BasicScreen {
                   Done done, Action cancel = nullptr);
   TextInputScreen& check(Check c) { check_ = std::move(c); return *this; }
   TextInputScreen& allowEmpty() { allowEmpty_ = true; return *this; }
+  // shows ABC / abc above the field (WiFi password)
+  TextInputScreen& showCase() { showCase_ = true; return *this; }
   InputMode inputMode() const override { return InputMode::Text; }
   void onInput(App& app, const InputEvent& e) override;
   void draw(App& app, ui::Framebuffer& fb) override;
@@ -215,7 +217,7 @@ class TextInputScreen : public BasicScreen {
   Action cancel_;
   Check check_;
   int pick_ = 0;
-  bool lower_ = false, hasCase_ = false, allowEmpty_ = false;
+  bool lower_ = false, hasCase_ = false, allowEmpty_ = false, showCase_ = false;
 };
 
 // ---- digit entry (PIN / emergency code) ----

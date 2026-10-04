@@ -88,6 +88,7 @@ void MenuScreen::ok(App& app, int i) {
   if (i < (int)items_.size() && items_[i].onOk) {
     Action a = items_[i].onOk;  // the item list may be rebuilt by the action
     a(app);
+    reload(app);
   }
 }
 
@@ -227,7 +228,7 @@ void TextInputScreen::onInput(App& app, const InputEvent& e) {
 
 void TextInputScreen::draw(App&, ui::Framebuffer& fb) {
   tk::titleBar(fb, titleText_);
-  if (hasCase_) ui::drawTextRight(fb, theme::small(), 122, 25, lower_ ? "abc" : "ABC", col::kGray);
+  if (hasCase_ && showCase_) ui::drawTextRight(fb, theme::small(), 122, 25, lower_ ? "abc" : "ABC", col::kGray);
   tk::textField(fb, text_);
   std::vector<std::string> labels;
   std::vector<const char*> icons((size_t)slots(), nullptr);

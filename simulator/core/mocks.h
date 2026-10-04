@@ -170,6 +170,12 @@ class MockPower : public hal::Power {
   void lightSleep() override { state_ = PowerState::LightSleep; }
   void deepSleep() override { state_ = PowerState::DeepSleep; }
   void powerOff() override { state_ = PowerState::Off; }
+  void restart() override { restartRequested_ = true; }
+  bool takeRestart() {
+    const bool r = restartRequested_;
+    restartRequested_ = false;
+    return r;
+  }
   hal::Usb usb() const override { return usb_; }
   std::string& retained() override { return retained_; }
 
@@ -187,6 +193,7 @@ class MockPower : public hal::Power {
   hal::Usb usb_ = hal::Usb::Unknown;  // the board profile has no USB sense pin yet
   std::string retained_;
   bool switchOn_ = true;
+  bool restartRequested_ = false;
 };
 
 // ---------- radios ----------
@@ -287,7 +294,7 @@ class MockWifi : public hal::Wifi {
   bool nextOk_ = true, ntp_ = true;
   uint32_t latencyMs_ = 800;
   uint32_t doneAt_ = 0;
-  int64_t worldEpoch_ = 1791091200;  // 2026-10-04 03:20:00 UTC
+  int64_t worldEpoch_ = 1791005640;  // 2026-10-03 05:34:00 UTC (12:34 local)
 };
 
 class MockBle : public hal::Ble {

@@ -67,6 +67,7 @@ void Simulator::advanceTo(uint32_t t) {
     wifi_.tick();
     // asleep or off: the firmware doesn't run (light sleep wakes by setButton)
     if (power_.state() == PowerState::Awake) app_->tick();
+    if (power_.takeRestart()) start(hal::WakeReason::PowerOn);
   }
 }
 

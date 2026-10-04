@@ -10,7 +10,5 @@ std::unique_ptr<Screen> stub(const char* code, const char* t) {
 namespace ir { std::unique_ptr<Screen> makeMenu(App&) { return stub("I0", "IR"); } }
 namespace nfc { std::unique_ptr<Screen> makeMenu(App&) { return stub("N0", "NFC"); } }
 namespace games { std::unique_ptr<Screen> makeMenu(App&) { return stub("G1", "GAMES"); } }
-namespace wifi { std::unique_ptr<Screen> makeMenu(App&) { return stub("F0", "WIFI"); } }
 namespace bt { std::unique_ptr<Screen> makeMenu(App&) { return stub("B-M0", "BLUETOOTH"); } }
-namespace settings { std::unique_ptr<Screen> makeMenu(App&) { return stub("T0", "SETTINGS"); } }
 }

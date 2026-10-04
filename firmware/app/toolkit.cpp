@@ -148,7 +148,7 @@ void catalogList(Framebuffer& fb, const std::vector<Row>& rows, int sel, int fir
     if (!r.value.empty()) {
       std::string v = r.value;
       if (editing && on) v = "< " + v + " >";
-      right(fb, rx, (int16_t)(y + kRowTextDy), v, c);
+      right(fb, rx, (int16_t)(y + kRowTextDy), v, r.valueWhite && !r.disabled ? col::kWhite : c);
       rx = (int16_t)(rx - textW(v) - 6);
     }
     int16_t lx = kRowTextX;
@@ -199,8 +199,8 @@ void launcherCards(Framebuffer& fb, const std::vector<Card>& cards, int sel, int
 void keyValues(Framebuffer& fb, const std::vector<KV>& rows, int16_t y0, int16_t step) {
   for (size_t i = 0; i < rows.size(); i++) {
     const int16_t y = (int16_t)(y0 + i * step);
-    text(fb, 6, y, rows[i].key, col::kGray);
-    right(fb, 122, y, rows[i].value, col::kWhite);
+    text(fb, 5, y, rows[i].key, col::kGray);
+    right(fb, 121, y, rows[i].value, col::kWhite);
   }
 }
 
@@ -218,13 +218,13 @@ void loadingAnim(Framebuffer& fb, int16_t x, int16_t y, uint32_t ms) {
 }
 
 void busy(Framebuffer& fb, const char* ic, const std::vector<std::string>& lines, uint32_t ms) {
-  if (ic) icon(fb, 52, 38, ic, col::kWhite, 2);
+  if (ic) icon(fb, centerIn(0, kScreenW, (int16_t)(theme::icon(ic).w * 2)), 40, ic, col::kWhite, 2);
   centredLines(fb, 70, lines, false, 11);
   loadingAnim(fb, 58, 110, ms);
 }
 
 void message(Framebuffer& fb, const char* ic, const std::vector<std::string>& lines) {
-  if (ic) icon(fb, 52, 49, ic, col::kWhite, 3);
+  if (ic) icon(fb, 52, 52, ic, col::kWhite, 3);
   centredLines(fb, ic ? 88 : 75, lines, false, 12);
 }
 
@@ -243,7 +243,7 @@ void dialog(Framebuffer& fb, const std::vector<std::string>& lines, const std::s
   fb.fillRect(6, y, 116, h, col::kBlack);
   fb.frameRect(6, y, 116, h, col::kWhite);
   for (size_t i = 0; i < lines.size(); i++) centred(fb, (int16_t)(y + 7 + 10 * i), lines[i], col::kWhite, 6, 116);
-  if (!hint.empty()) centred(fb, (int16_t)(y + h - 13), hint, col::kGray, 6, 116);
+  if (!hint.empty()) centred(fb, (int16_t)(y + 12 + 10 * lines.size()), hint, col::kGray, 6, 116);
 }
 
 void popup(Framebuffer& fb, const std::vector<std::string>& items, int sel, int16_t cy) {

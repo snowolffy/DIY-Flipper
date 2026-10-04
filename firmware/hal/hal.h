@@ -105,6 +105,8 @@ class Power {
   virtual void deepSleep() = 0;
   // Deep sleep with no wake source, for a flat battery. Does not return.
   virtual void powerOff() = 0;
+  // Software reset (after a factory reset). Does not return on the device.
+  virtual void restart() = 0;
   // USB power plugged in. Unknown when the board has no sense pin (see the board profile).
   virtual Usb usb() const = 0;
   // A few bytes that survive deep sleep (RTC memory on the ESP32), lost on power-off.
