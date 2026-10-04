@@ -5,12 +5,12 @@ on:
   pull_request:
 
 jobs:
-  headless:
-    name: headless (${{ matrix.os }})
+  emulator:
+    name: sim (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -18,32 +18,35 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build --config Release --parallel
-      - name: Unit tests and mock-scripts
+      - name: Unit tests, flow scripts, app-rule build checks, terminal session
         run: ctest --test-dir build -C Release --output-on-failure
-
-  gui:
-    name: sim_gui (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install X11 headers
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDIYF_BUILD_GUI=ON
-      - name: Build
-        run: cmake --build build --config Release --parallel
-      - name: Tests (incl. GUI smoke test on Linux)
-        run: ctest --test-dir build -C Release --output-on-failure
-      - name: Upload portable Windows build
+      - name: Upload sim.exe (portable, one file)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: diy-flipper-simulator-windows
+          name: diy-flipper-sim-windows
+          path: build/Release/sim.exe
+
+  esp32s3:
+    name: firmware (ESP32-S3 N16R8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
           path: |
-            build/Release/sim_gui.exe
-            build/Release/sim_headless.exe
+            ~/.platformio/.cache
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: pio-${{ hashFiles('platformio.ini') }}
+      - name: Install PlatformIO
+        run: pip install platformio==6.1.16
+      - name: Build
+        run: pio run -e esp32s3 | tee build.log
+      - name: Flash and RAM use
+        run: |
+          grep -E "^(RAM|Flash):" build.log | tee -a "$GITHUB_STEP_SUMMARY"
+          pio run -e esp32s3 -t size | tail -n 15 | tee -a "$GITHUB_STEP_SUMMARY"
